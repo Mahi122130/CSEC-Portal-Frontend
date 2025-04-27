@@ -1,10 +1,13 @@
 "use client";
 
 import * as React from "react";
+import { FaRegUser } from "react-icons/fa";
+import { ImExit } from "react-icons/im";
 import DownArrow from "@/components/icons/images/DownArrow.png";
 import Img from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 import {
   DropdownMenu,
@@ -17,14 +20,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function DropDownMenu() {
-  const [position, setPosition] = React.useState("bottom");
-
+  const router = useRouter();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          className="flex w-46 h-12 border-1 border-gray-300 rounded-[8px]"
-        >
+        <Button className="flex w-46 h-12 border-1 border-gray-300 rounded-[8px]">
           <div className="flex">
             <div className="flex w-auto items-center p-1">
               <Avatar>
@@ -44,12 +44,22 @@ export default function DropDownMenu() {
           </div>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-50">
+      <DropdownMenuContent className="w-45">
         <DropdownMenuLabel></DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuRadioGroup>
-          <DropdownMenuRadioItem value="top">My Profile</DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="bottom">logout</DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="top">
+            <div className="flex gap-2" onClick={() => router.push("/dashboard/profile")}>
+              <FaRegUser />
+              <div>My Profile</div>
+            </div>
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="bottom">
+            <div className="flex gap-2" onClick={() => router.push("/login")}>
+              <ImExit color="red" />
+              <div>Logout</div>
+            </div>
+          </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
