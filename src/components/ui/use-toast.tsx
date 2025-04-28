@@ -1,4 +1,3 @@
-// src/components/ui/use-toast.tsx
 "use client";
 
 import * as React from "react";
@@ -22,7 +21,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const toast = (props: ToastProps) => {
     const toastId = Date.now().toString();
     const duration = props.duration || 3000;
-    
+
     setToasts((current) => [...current, { ...props, id: toastId }]);
     setTimeout(() => {
       setToasts((current) => current.filter((toast) => toast.id !== toastId));
@@ -35,6 +34,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       <div className="fixed top-4 right-4 z-50 space-y-2">
         {toasts.map((toast) => (
           <Toast
+            key={toast.id}
             title={toast.title}
             description={toast.description}
             variant={toast.variant}

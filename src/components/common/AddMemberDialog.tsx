@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { MdAddCircleOutline } from "react-icons/md";
 import { useState } from "react";
@@ -18,18 +18,47 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import api from "@/lib/axios";
+import { useToast } from "@/components/ui/use-toast";
+import Cookies from "js-cookie";
+
+const divisions = [
+  { id: "680a9a2b9e86262d7c618bd1", name: "Competitive Programming" },
+  { id: "680a9a2c9e86262d7c618bd4", name: "Development" },
+  { id: "680a9a2d9e86262d7c618bd7", name: "Data Science" },
+  { id: "680a9a2e9e86262d7c618bda", name: "Cyber Security" },
+];
+
+const groups = [
+  { id: "680a9a2f9e86262d7c618bde", name: "G1" },
+  { id: "680a9a2f9e86262d7c618be1", name: "G2" },
+  { id: "680a9a309e86262d7c618be4", name: "G3" },
+  { id: "680a9a309e86262d7c618be7", name: "G4" },
+  { id: "680a9a319e86262d7c618beb", name: "G1 (Dev)" },
+  { id: "680a9a329e86262d7c618bee", name: "G2 (Dev)" },
+  { id: "680a9a339e86262d7c618bf1", name: "G3 (Dev)" },
+  { id: "680a9a339e86262d7c618bf4", name: "G4 (Dev)" },
+  { id: "680a9a359e86262d7c618bf8", name: "G1 (DS)" },
+  { id: "680a9a369e86262d7c618bfb", name: "G2 (DS)" },
+  { id: "680a9a369e86262d7c618bfe", name: "G3 (DS)" },
+  { id: "680a9a379e86262d7c618c01", name: "G4 (DS)" },
+  { id: "680a9a379e86262d7c618c05", name: "G1 (Cyber)" },
+  { id: "680a9a389e86262d7c618c08", name: "G2 (Cyber)" },
+  { id: "680a9a399e86262d7c618c0b", name: "G3 (Cyber)" },
+  { id: "680a9a3a9e86262d7c618c0e", name: "G4 (Cyber)" },
+];
 
 export function AddMemberDialog() {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
-  const [division, setDivision] = useState("");
-  const [group, setGroup] = useState("");
+  const [divisionId, setDivision] = useState("");
+  const [groupId, setGroup] = useState("");
   const [password, setPassword] = useState("");
   const [generatedPassword, setGeneratedPassword] = useState("");
+  const { toast } = useToast();
 
   const generateRandomPassword = () => {
-    const chars =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
     let result = "";
     for (let i = 0; i < 12; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -37,22 +66,63 @@ export function AddMemberDialog() {
     setGeneratedPassword(result);
   };
 
-  const handleInvite = () => {
-    // Handle the invite logic here
-    console.log({
-      email,
-      division,
-      group,
-      password: password || generatedPassword,
-    });
+  const handleInvite = async () => {
+    const finalPassword = password || generatedPassword;
 
-    // Reset form and close dialog
-    setEmail("");
-    setDivision("");
-    setGroup("");
-    setPassword("");
-    setGeneratedPassword("");
-    setOpen(false);
+    // Validation checks
+    if (!email || !divisionId || !groupId || !finalPassword) {
+      toast({
+        id: "null-fields",
+        title: "Missing Fields",
+        description: "Please fill all fields or generate a password.",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
+
+    try {
+      const token = Cookies.get('accessToken');
+      if (!token) {
+        throw new Error('Unauthorized: No token found.');
+      }
+
+      await api.post('/user/register', {
+        email,
+        divisionId,
+        groupId,
+        password: finalPassword,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      toast({
+        id: "invite-success",
+        title: "Member Invited",
+        description: "Successfully invited the member!",
+        variant: "success",
+        duration: 3000,
+      });
+
+      // Reset form and close dialog
+      setEmail("");
+      setDivision("");
+      setGroup("");
+      setPassword("");
+      setGeneratedPassword("");
+      setOpen(false);
+    } catch (error: any) {
+      toast({
+        id: "invite-fail",
+        title: "Invite Failed",
+        description: error.message || "Something went wrong. Try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
+      console.error("Invite Error:", error);
+    }
   };
 
   return (
@@ -76,29 +146,31 @@ export function AddMemberDialog() {
         </DialogHeader>
         <div className="flex flex-col space-y-3">
           <div className="space-y-2">
-            <Select value={division} onValueChange={setDivision}>
+            <Select value={divisionId} onValueChange={setDivision}>
               <SelectTrigger className="flex w-70 h-11 px-3 py-6 border-1 border-gray-300 rounded-[8px]">
                 <SelectValue placeholder="Select Division" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="cpd">Competitive Programming </SelectItem>
-                <SelectItem value="wdd">Development </SelectItem>
-                <SelectItem value="ds">Data Science </SelectItem>
-                <SelectItem value="cs">Cyber Security </SelectItem>
+                {divisions.map((div) => (
+                  <SelectItem key={div.id} value={div.id}>
+                    {div.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Select value={group} onValueChange={setGroup}>
+            <Select value={groupId} onValueChange={setGroup}>
               <SelectTrigger className="flex w-70 h-11 px-3 py-6 border-1 border-gray-300 rounded-[8px]">
                 <SelectValue placeholder="Select Group" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="team-a">Team A</SelectItem>
-                <SelectItem value="team-b">Team B</SelectItem>
-                <SelectItem value="team-c">Team C</SelectItem>
-                <SelectItem value="leadership">Leadership</SelectItem>
+                {groups.map((grp) => (
+                  <SelectItem key={grp.id} value={grp.id}>
+                    {grp.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -124,7 +196,7 @@ export function AddMemberDialog() {
 
             <Button
               onClick={generateRandomPassword}
-              className="flex rounded-md text-white w-20 h-11 px-3 py-6  shrink-0 cursor-pointer bg-[#003087] hover:bg-[#002f87a2]"
+              className="flex rounded-md text-white w-20 h-11 px-3 py-6 shrink-0 cursor-pointer bg-[#003087] hover:bg-[#002f87a2a]"
             >
               Generate
             </Button>
@@ -141,29 +213,25 @@ export function AddMemberDialog() {
           </div>
 
           <div className="flex justify-center items-center gap-3">
-            <div className="flex gap-3 items-center justify-center">
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => setOpen(false)}
-                className="flex h-10 w-35 rounded-md items-center justify-center bg-[#34495E0D] cursor-pointer hover:bg-[#48637e0d]"
-                aria-label="Cancel"
-              >
-                <h3 className="ml-1"> Cancel </h3>
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setOpen(false)}
+              className="flex h-10 w-35 rounded-md items-center justify-center bg-[#34495E0D] cursor-pointer hover:bg-[#48637e0d]"
+              aria-label="Cancel"
+            >
+              <h3 className="ml-1"> Cancel </h3>
+            </Button>
 
-            <div className="flex gap-5 items-center justify-center">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleInvite}
-                className="flex h-10 w-35 rounded-md items-center justify-center bg-[#003087] cursor-pointer hover:bg-[#002f87a2]"
-                aria-label="Invite"
-              >
-                <h3 className="text-[#F8F8F8] ml-1"> Invite </h3>
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleInvite}
+              className="flex h-10 w-35 rounded-md items-center justify-center bg-[#003087] cursor-pointer hover:bg-[#002f87a2]"
+              aria-label="Invite"
+            >
+              <h3 className="text-[#F8F8F8] ml-1"> Invite </h3>
+            </Button>
           </div>
         </div>
       </DialogContent>
