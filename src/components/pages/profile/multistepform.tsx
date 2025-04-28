@@ -150,7 +150,12 @@ export default function MultiStepForm() {
           </TabsList>
 
           <TabsContent value="required">
-            <RequiredInformation formData={formData} handleChange={handleChange} />
+            <RequiredInformation
+              formData={formData}
+              handleChange={handleChange}
+              onNext={handleNext}
+              onCancel={handlePrevious}
+            />
           </TabsContent>
 
           <TabsContent value="optional">

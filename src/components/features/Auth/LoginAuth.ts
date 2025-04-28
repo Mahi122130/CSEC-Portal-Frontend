@@ -3,7 +3,7 @@
 import { FormData } from "@/components/features/Validation/LoginValidate";
 import Cookies from "js-cookie";
 
-export async function handleLogin(data: FormData, rememberMe: boolean) {
+export async function handleLogin(data: FormData) {
   const API_URL = `${process.env.NEXT_PUBLIC_API_ENDPOINT}auth/login`;
 
   try {
@@ -13,28 +13,26 @@ export async function handleLogin(data: FormData, rememberMe: boolean) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ ...data }),
-      credentials: "include", // Ensure credentials are sent with the request
+      credentials: "include",
     });
 
     const responseData = await response.json();
     console.log('FULL login response:', responseData);
 
     const accessToken = responseData.accessToken;
-    const refreshToken = responseData.refreshToken || null; // May not exist
-    const role = responseData.user?.role || null; // Role is inside user object!
+    const refreshToken = responseData.refreshToken || null;
+    const role = responseData.user?.role || null;
 
     if (!accessToken || !role) {
       throw new Error("Missing access token or role from server.");
     }
 
-    // Set cookies based on rememberMe flag
-    if (rememberMe) {
-      // Save everything if rememberMe is true
+    // Set cookies based on rememberMe flag from the form data
+    if (data.rememberMe) {
       Cookies.set('accessToken', accessToken, { expires: 7, sameSite: 'Lax', secure: process.env.NODE_ENV === 'production' });
       Cookies.set('refreshToken', refreshToken, { expires: 7, sameSite: 'Lax', secure: process.env.NODE_ENV === 'production' });
       Cookies.set('role', role, { expires: 7, sameSite: 'Lax', secure: process.env.NODE_ENV === 'production' });
     } else {
-      // Save only accessToken and role without expiration
       Cookies.set('accessToken', accessToken, { sameSite: 'Lax', secure: process.env.NODE_ENV === 'production' });
       Cookies.set('role', role, { sameSite: 'Lax', secure: process.env.NODE_ENV === 'production' });
     }

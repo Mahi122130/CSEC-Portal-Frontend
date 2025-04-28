@@ -138,7 +138,10 @@ export default function ResourcePage() {
       </div>
 
       {showAddResourceModal && (
-        <AddResourceModal onClose={() => setShowAddResourceModal(false)} onAdd={handleAddResource} />
+        <AddResourceModal
+          onClose={() => setShowAddResourceModal(false)}
+          onAdd={(name, link) => handleAddResource("cpd", name, link)}
+        />
       )}
     </div>
   )

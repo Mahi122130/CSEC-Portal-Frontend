@@ -19,7 +19,6 @@ import { Label } from "@/components/ui/label";
 import logo from "@/components/icons/images/Logoipsum.png";
 
 export function LoginForm() {
-
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
