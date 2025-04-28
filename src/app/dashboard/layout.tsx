@@ -18,7 +18,7 @@ export default function DashboardLayout({
           <div className="flex flex-col flex-1 overflow-x-hidden">
             <div className="flex items-center space-x-1">
               <SidebarTrigger />
-              <Navbar name="Henok" />
+              <Navbar />
             </div>
             <main className="flex-1">{children}</main>
           </div>

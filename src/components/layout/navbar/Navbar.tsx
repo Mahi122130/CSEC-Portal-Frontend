@@ -7,14 +7,30 @@ import { LuSearch } from "react-icons/lu";
 import { GoBell } from "react-icons/go";
 import DropDownMenu from "./DropDownMenu";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react"; 
 
 interface NavbarProps {
-  name: string;
+  name?: string;
   time?: string;
 }
 
 export default function Navbar({ name, time }: NavbarProps) {
+  const [fname, setFname] = useState("Guest");
   const pathname = usePathname();
+
+  useEffect(() => {
+    const userString = localStorage.getItem("user");
+    if (userString) {
+      try {
+        const user = JSON.parse(userString);
+        const firstName = user?.personal_info?.first_name || "Guest"; 
+        setFname(firstName);
+      } catch (error) {
+        console.error("Failed to parse user from localStorage", error);
+      }
+    }
+  }, []);
+
   const getTimeOfDay = () => {
     if (time) return time;
     const hour = new Date().getHours();
@@ -23,7 +39,6 @@ export default function Navbar({ name, time }: NavbarProps) {
     return "evening";
   };
 
-  // Determine the greeting based on the route
   const getGreeting = () => {
     if (pathname === '/dashboard/allmembers') {
       return (
@@ -43,7 +58,7 @@ export default function Navbar({ name, time }: NavbarProps) {
       return (
         <>
           <div className="flex gap-1">
-            <h1 className="text-lg font-semibold">Hello {name}</h1>
+            <h1 className="text-lg font-semibold">Hello {fname}</h1> 
             <Image
               src={ShakeHand}
               alt="Handshake icon"
@@ -69,9 +84,9 @@ export default function Navbar({ name, time }: NavbarProps) {
 
       <div className="flex gap-3 w-auto justify-center items-center">
         <div className="flex justify-center gap-1 border-1 border-gray-300 rounded-[8px] h-12 items-center focus:outline-blue-600 focus:border-blue-600">
-          <LuSearch size={45} className="p-3"/>
+          <LuSearch size={45} className="p-3" />
           <div>
-            <Input type="text" placeholder="Search" className="outline-none border-0 shadow-none focus:outline-0 focus:border-0 focus:shadow-none"/>
+            <Input type="text" placeholder="Search" className="outline-none border-0 shadow-none focus:outline-0 focus:border-0 focus:shadow-none" />
           </div>
         </div>
 
