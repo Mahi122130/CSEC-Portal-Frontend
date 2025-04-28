@@ -13,7 +13,7 @@ export async function handleLogin(data: FormData) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ ...data }),
-      credentials: "include",
+      credentials: "include", // Allow sending cookies if needed
     });
 
     const responseData = await response.json();
@@ -27,15 +27,17 @@ export async function handleLogin(data: FormData) {
       throw new Error("Missing access token or role from server.");
     }
 
-    // Set cookies based on rememberMe flag from the form data
-    if (data.rememberMe) {
-      Cookies.set('accessToken', accessToken, { expires: 7, sameSite: 'Lax', secure: process.env.NODE_ENV === 'production' });
-      Cookies.set('refreshToken', refreshToken, { expires: 7, sameSite: 'Lax', secure: process.env.NODE_ENV === 'production' });
-      Cookies.set('role', role, { expires: 7, sameSite: 'Lax', secure: process.env.NODE_ENV === 'production' });
-    } else {
-      Cookies.set('accessToken', accessToken, { sameSite: 'Lax', secure: process.env.NODE_ENV === 'production' });
-      Cookies.set('role', role, { sameSite: 'Lax', secure: process.env.NODE_ENV === 'production' });
-    }
+    // Build cookie options
+    const cookieOptions = {
+      sameSite: 'Lax' as const,
+      secure: process.env.NODE_ENV === 'production',
+      ...(data.rememberMe ? { expires: 7 } : {}), // 7 days if rememberMe is checked
+    };
+
+    // Set cookies
+    Cookies.set('accessToken', accessToken, cookieOptions);
+    Cookies.set('refreshToken', refreshToken, cookieOptions);
+    Cookies.set('role', role, cookieOptions);
 
     console.log('Saved cookies:', {
       accessToken: Cookies.get('accessToken'),
