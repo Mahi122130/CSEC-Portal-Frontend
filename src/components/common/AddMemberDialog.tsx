@@ -19,8 +19,9 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import api from "@/lib/axios";
-import { useToast } from "@/components/ui/use-toast";
 import Cookies from "js-cookie";
+import { useToast } from "@/components/ui/use-toast";
+import { any } from "zod";
 
 const divisions = [
   { id: "680a9a2b9e86262d7c618bd1", name: "Competitive Programming" },
@@ -29,24 +30,32 @@ const divisions = [
   { id: "680a9a2e9e86262d7c618bda", name: "Cyber Security" },
 ];
 
-const groups = [
-  { id: "680a9a2f9e86262d7c618bde", name: "G1" },
-  { id: "680a9a2f9e86262d7c618be1", name: "G2" },
-  { id: "680a9a309e86262d7c618be4", name: "G3" },
-  { id: "680a9a309e86262d7c618be7", name: "G4" },
-  { id: "680a9a319e86262d7c618beb", name: "G1 (Dev)" },
-  { id: "680a9a329e86262d7c618bee", name: "G2 (Dev)" },
-  { id: "680a9a339e86262d7c618bf1", name: "G3 (Dev)" },
-  { id: "680a9a339e86262d7c618bf4", name: "G4 (Dev)" },
-  { id: "680a9a359e86262d7c618bf8", name: "G1 (DS)" },
-  { id: "680a9a369e86262d7c618bfb", name: "G2 (DS)" },
-  { id: "680a9a369e86262d7c618bfe", name: "G3 (DS)" },
-  { id: "680a9a379e86262d7c618c01", name: "G4 (DS)" },
-  { id: "680a9a379e86262d7c618c05", name: "G1 (Cyber)" },
-  { id: "680a9a389e86262d7c618c08", name: "G2 (Cyber)" },
-  { id: "680a9a399e86262d7c618c0b", name: "G3 (Cyber)" },
-  { id: "680a9a3a9e86262d7c618c0e", name: "G4 (Cyber)" },
-];
+const allGroups: Record<string, { id: string; name: string }[]> = {
+  "680a9a2b9e86262d7c618bd1": [
+    { id: "680a9a2f9e86262d7c618bde", name: "G1" },
+    { id: "680a9a2f9e86262d7c618be1", name: "G2" },
+    { id: "680a9a309e86262d7c618be4", name: "G3" },
+    { id: "680a9a309e86262d7c618be7", name: "G4" },
+  ],
+  "680a9a2c9e86262d7c618bd4": [
+    { id: "680a9a319e86262d7c618beb", name: "G1 (Dev)" },
+    { id: "680a9a329e86262d7c618bee", name: "G2 (Dev)" },
+    { id: "680a9a339e86262d7c618bf1", name: "G3 (Dev)" },
+    { id: "680a9a339e86262d7c618bf4", name: "G4 (Dev)" },
+  ],
+  "680a9a2d9e86262d7c618bd7": [
+    { id: "680a9a359e86262d7c618bf8", name: "G1 (DS)" },
+    { id: "680a9a369e86262d7c618bfb", name: "G2 (DS)" },
+    { id: "680a9a369e86262d7c618bfe", name: "G3 (DS)" },
+    { id: "680a9a379e86262d7c618c01", name: "G4 (DS)" },
+  ],
+  "680a9a2e9e86262d7c618bda": [
+    { id: "680a9a379e86262d7c618c05", name: "G1 (Cyber)" },
+    { id: "680a9a389e86262d7c618c08", name: "G2 (Cyber)" },
+    { id: "680a9a399e86262d7c618c0b", name: "G3 (Cyber)" },
+    { id: "680a9a3a9e86262d7c618c0e", name: "G4 (Cyber)" },
+  ],
+};
 
 export function AddMemberDialog() {
   const [open, setOpen] = useState(false);
@@ -69,7 +78,6 @@ export function AddMemberDialog() {
   const handleInvite = async () => {
     const finalPassword = password || generatedPassword;
 
-    // Validation checks
     if (!email || !divisionId || !groupId || !finalPassword) {
       toast({
         id: "null-fields",
@@ -106,7 +114,6 @@ export function AddMemberDialog() {
         duration: 3000,
       });
 
-      // Reset form and close dialog
       setEmail("");
       setDivision("");
       setGroup("");
@@ -117,13 +124,15 @@ export function AddMemberDialog() {
       toast({
         id: "invite-fail",
         title: "Invite Failed",
-        description: error.message || "Something went wrong. Try again.",
+        description: error?.response?.data?.message || error.message || "Something went wrong. Try again.",
         variant: "destructive",
         duration: 3000,
       });
       console.error("Invite Error:", error);
     }
   };
+
+  const availableGroups: { id: string; name: string }[] = divisionId ? allGroups[divisionId] || [] : [];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -133,7 +142,7 @@ export function AddMemberDialog() {
           className="flex rounded-md bg-[#003087] text-white h-12 w-32 items-center justify-center cursor-pointer hover:bg-[#002f87a2]"
         >
           <div className="flex gap-1 items-center justify-center">
-            <MdAddCircleOutline size={50} />
+            <MdAddCircleOutline size={20} />
             <div>Add Member</div>
           </div>
         </Button>
@@ -146,7 +155,10 @@ export function AddMemberDialog() {
         </DialogHeader>
         <div className="flex flex-col space-y-3">
           <div className="space-y-2">
-            <Select value={divisionId} onValueChange={setDivision}>
+            <Select value={divisionId} onValueChange={(value) => {
+              setDivision(value);
+              setGroup(""); // Reset group when division changes
+            }}>
               <SelectTrigger className="flex w-70 h-11 px-3 py-6 border-1 border-gray-300 rounded-[8px]">
                 <SelectValue placeholder="Select Division" />
               </SelectTrigger>
@@ -161,12 +173,12 @@ export function AddMemberDialog() {
           </div>
 
           <div className="space-y-2">
-            <Select value={groupId} onValueChange={setGroup}>
+            <Select value={groupId} onValueChange={setGroup} disabled={!divisionId}>
               <SelectTrigger className="flex w-70 h-11 px-3 py-6 border-1 border-gray-300 rounded-[8px]">
                 <SelectValue placeholder="Select Group" />
               </SelectTrigger>
               <SelectContent>
-                {groups.map((grp) => (
+                {availableGroups.map((grp) => (
                   <SelectItem key={grp.id} value={grp.id}>
                     {grp.name}
                   </SelectItem>
