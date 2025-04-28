@@ -53,15 +53,15 @@ export default function DropDownMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button className="flex w-46 h-12 border-1 border-gray-300 rounded-[8px]">
-          <div className="flex w-full">
-            <div className="flex w-full items-center p-1">
+          <div className="flex w-full px-2 gap-2">
+            <div className="flex w-fit items-center p-1">
               <Avatar>
                 <AvatarImage src="https://github.com/shadcn.png" />
                 <AvatarFallback>CN</AvatarFallback>
               </Avatar>
             </div>
 
-            <div className="flex flex-col w-full items-start justify-center p-1">
+            <div className="flex flex-col w-fit items-start justify-center p-1">
               <h1 className="font-bold">{fullName}</h1>
               <h3 className="text-gray-600">{role}</h3>
             </div>
