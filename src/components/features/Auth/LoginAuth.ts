@@ -13,7 +13,7 @@ export async function handleLogin(data: FormData) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ ...data }),
-      credentials: "include", // Allow sending cookies if needed
+      credentials: "include",
     });
 
     const responseData = await response.json();
@@ -22,6 +22,7 @@ export async function handleLogin(data: FormData) {
     const accessToken = responseData.accessToken;
     const refreshToken = responseData.refreshToken || null;
     const role = responseData.user?.role || null;
+    const user = responseData.user || null;
 
     if (!accessToken || !role) {
       throw new Error("Missing access token or role from server.");
@@ -31,7 +32,7 @@ export async function handleLogin(data: FormData) {
     const cookieOptions = {
       sameSite: 'Lax' as const,
       secure: process.env.NODE_ENV === 'production',
-      ...(data.rememberMe ? { expires: 7 } : {}), // 7 days if rememberMe is checked
+      ...(data.rememberMe ? { expires: 7 } : {}),
     };
 
     // Set cookies
@@ -39,10 +40,20 @@ export async function handleLogin(data: FormData) {
     Cookies.set('refreshToken', refreshToken, cookieOptions);
     Cookies.set('role', role, cookieOptions);
 
-    console.log('Saved cookies:', {
-      accessToken: Cookies.get('accessToken'),
-      refreshToken: Cookies.get('refreshToken'),
-      role: Cookies.get('role'),
+    // Store only the user object in localStorage
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+
+    console.log('Saved auth data:', {
+      cookies: {
+        accessToken: Cookies.get('accessToken'),
+        refreshToken: Cookies.get('refreshToken'),
+        role: Cookies.get('role'),
+      },
+      localStorage: {
+        user: user
+      }
     });
 
     return {
@@ -51,6 +62,8 @@ export async function handleLogin(data: FormData) {
     };
   } catch (error) {
     console.error("Login failed:", error);
+    // Clear user data on error
+    localStorage.removeItem('user');
     return {
       success: false,
       error: error instanceof Error ? error.message : "Login failed. Please try again.",

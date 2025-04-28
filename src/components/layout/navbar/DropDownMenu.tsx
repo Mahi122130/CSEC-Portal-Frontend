@@ -52,7 +52,7 @@ export default function DropDownMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button className="flex w-46 h-12 border-1 border-gray-300 rounded-[8px]">
+        <Button className="flex w-full h-12 border-1 border-gray-300 rounded-[8px]">
           <div className="flex w-full px-2 gap-2">
             <div className="flex w-fit items-center p-1">
               <Avatar>

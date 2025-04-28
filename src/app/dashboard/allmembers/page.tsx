@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Cookies from "js-cookie";
 import {
   MembersTable,
   type Member,
@@ -8,7 +9,6 @@ import {
 import { TableFilter } from "@/components/common/TableFilter";
 import { TablePagination } from "@/components/common/TablePagination";
 
-// Sample data
 const sampleMembers: Member[] = [
   {
     id: "UGR/5800/14",
@@ -94,8 +94,14 @@ const sampleMembers: Member[] = [
 
 export default function TableUsage() {
   const [currentPage, setCurrentPage] = useState(1);
+  const [canAddMembers, setCanAddMembers] = useState(false);
 
-  // handlers
+  useEffect(() => {
+    const role = Cookies.get('role');
+    setCanAddMembers(!!role && role !== 'member');
+  }, []);
+
+  // handlers (unchanged)
   const handleSearch = (value: string) => {
     console.log("Searching for:", value);
   };
@@ -116,12 +122,12 @@ export default function TableUsage() {
         <div className="flex-1 gap-3 flex flex-col p-2">
           {/* Main Content Area */}
           <main className="flex-1 flex flex-col gap-6">
-            {/* Filter */}
+            {/* Filter - now with dynamic addMembersButton */}
             <TableFilter
               onSearch={handleSearch}
               onFilter={handleFilter}
               placeholder="Search members..."
-              addMembersButton={true}
+              addMembersButton={canAddMembers} // Controlled by role check
             />
             <div>
               {/* Table */}
