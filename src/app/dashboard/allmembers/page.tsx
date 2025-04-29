@@ -2,145 +2,121 @@
 
 import { useState, useEffect } from "react";
 import Cookies from "js-cookie";
-import {
-  MembersTable,
-  type Member,
-} from "@/components/pages/allmembers/MembersTable";
+import { MembersTable } from "@/components/pages/allmembers/MembersTable";
 import { TableFilter } from "@/components/common/TableFilter";
 import { TablePagination } from "@/components/common/TablePagination";
+import api from "@/lib/axios";
+import { Button } from "@/components/ui/button";
 
-const sampleMembers: Member[] = [
-  {
-    id: "UGR/5800/14",
-    name: "Kiya Kebe",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Active",
-    year: "4th",
-    status: "OnCampus",
-  },
-  {
-    id: "UGR/5870/14",
-    name: "Mohammed Sadik",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Active",
-    year: "5th",
-    status: "OffCampus",
-  },
-  {
-    id: "UGR/5850/14",
-    name: "Hussein Beshir",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Needs Attention",
-    year: "3rd",
-    status: "Withdrawn",
-  },
-  {
-    id: "UGR/5340/14",
-    name: "Estifanos Tesfaye",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Inactive",
-    year: "4th",
-    status: "Withdrawn",
-  },
-  {
-    id: "UGR/2840/14",
-    name: "Mahelet Yared",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Needs Attention",
-    year: "5th",
-    status: "Withdrawn",
-  },
-  {
-    id: "UGR/1800/14",
-    name: "Kiya Kebe",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Active",
-    year: "4th",
-    status: "OnCampus",
-  },
-  {
-    id: "UGR/1870/14",
-    name: "Mohammed Sadik",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Active",
-    year: "5th",
-    status: "OffCampus",
-  },
-  {
-    id: "UGR/1850/14",
-    name: "Hussein Beshir",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Needs Attention",
-    year: "3rd",
-    status: "Withdrawn",
-  },
-  {
-    id: "UGR/1340/14",
-    name: "Estifanos Tesfaye",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Inactive",
-    year: "4th",
-    status: "Withdrawn",
-  },
-  {
-    id: "UGR/1840/14",
-    name: "Mahelet Yared",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Needs Attention",
-    year: "5th",
-    status: "Withdrawn",
-  },
-];
-
-export default function TableUsage() {
+export default function MembersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [canAddMembers, setCanAddMembers] = useState(false);
+  const [members, setMembers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     const role = Cookies.get('role');
     setCanAddMembers(!!role && role !== 'member');
-  }, []);
+    fetchMembers();
+  }, [currentPage]);
 
-  // handlers (unchanged)
+  const fetchMembers = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const token = Cookies.get('accessToken');
+      if (!token) {
+        setError('Please login again to show members');
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await api.get('/user', {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'ngrok-skip-browser-warning': 'true'
+        },
+        params: { page: currentPage, limit: itemsPerPage },
+        withCredentials: false
+      });
+
+      // Directly use the array from response
+      if (Array.isArray(response.data)) {
+        setMembers(response.data);
+        setTotalItems(response.data.length);
+      } else if (Array.isArray(response.data.data)) {
+        setMembers(response.data.data);
+        setTotalItems(response.data.total || response.data.data.length);
+      } else {
+        setError('Received unexpected data format from server');
+      }
+    } catch (error: any) {
+      setError(error.message || "Failed to fetch members");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRetry = () => {
+    setError(null);
+    fetchMembers();
+  };
+
   const handleSearch = (value: string) => {
     console.log("Searching for:", value);
   };
 
-  const handleFilter = () => {
-    console.log("Filter button clicked");
-  };
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    console.log("Page changed to:", page);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <div className="text-red-500 text-center max-w-md">{error}</div>
+        <Button 
+          onClick={handleRetry}
+          className="bg-[#003087] hover:bg-[#002f87a2] text-white rounded-[10px] p-2"
+        >
+          Try Again
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full min-w-240 max-w-full mr-5 my-3 gap-4 rounded-[8px] border-1 border-gray-300">
       <div className="flex">
-        {/* Main Content */}
         <div className="flex-1 gap-3 flex flex-col p-2">
-          {/* Main Content Area */}
           <main className="flex-1 flex flex-col gap-6">
-            {/* Filter - now with dynamic addMembersButton */}
             <TableFilter
               onSearch={handleSearch}
-              onFilter={handleFilter}
+              onFilter={() => console.log("Filter clicked")}
               placeholder="Search members..."
-              addMembersButton={canAddMembers} // Controlled by role check
+              addMembersButton={canAddMembers}
             />
             <div>
-              {/* Table */}
-              <MembersTable members={sampleMembers} />
-
-              {/* Pagination */}
-              <TablePagination
-                currentPage={currentPage}
-                totalPages={5}
-                totalItems={42}
-                itemsPerPage={10}
-                onPageChange={handlePageChange}
-              />
+              <MembersTable apiMembers={members} />
+              {members.length > 0 && (
+                <TablePagination
+                  currentPage={currentPage}
+                  totalPages={Math.ceil(totalItems / itemsPerPage)}
+                  totalItems={totalItems}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={handlePageChange}
+                />
+              )}
             </div>
           </main>
         </div>
