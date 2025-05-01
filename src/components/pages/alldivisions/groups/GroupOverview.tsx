@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import GroupCardComponents from "@/components/common/GroupCard";
+import GroupCardComponents from "@/components/pages/alldivisions/groups/GroupCard";
 
 // Group data model
 interface Group {

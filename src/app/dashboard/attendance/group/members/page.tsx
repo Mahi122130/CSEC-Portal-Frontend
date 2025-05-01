@@ -1,12 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { type Member } from "@/components/pages/allmembers/MembersTable";
 import AttendanceTable from "@/components/pages/attendance/AttendanceTable";
 import { TableFilter } from "@/components/common/TableFilter";
 import { TablePagination } from "@/components/common/TablePagination";
 
 // Sample data
+// Define the Member type
+interface Member {
+  id: string;
+  name: string;
+  avatar: string;
+  attendance: string;
+  year: string;
+  status: string;
+}
+
 const sampleMembers: Member[] = [
   {
     id: "UGR/5800/14",

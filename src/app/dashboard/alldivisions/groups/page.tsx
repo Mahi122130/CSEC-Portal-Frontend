@@ -1,7 +1,7 @@
 "use client";
 
 import { GroupsHeader } from "@/components/pages/alldivisions/groups/GroupsHeader";
-import GroupOverview from "@/components/common/GroupOverview";
+import GroupOverview from "@/components/pages/alldivisions/groups/GroupOverview";
 
 export default function TableUsage() {
   const handleSearch = (value: string) => {

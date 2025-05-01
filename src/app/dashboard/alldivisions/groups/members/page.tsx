@@ -1,96 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import {
-  MembersTable,
-  type Member,
-} from "@/components/pages/allmembers/MembersTable";
 import { TableFilter } from "@/components/common/TableFilter";
 import { TablePagination } from "@/components/common/TablePagination";
-
-// Sample data
-const sampleMembers: Member[] = [
-  {
-    id: "UGR/5800/14",
-    name: "Kiya Kebe",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Active",
-    year: "4th",
-    status: "OnCampus",
-  },
-  {
-    id: "UGR/5870/14",
-    name: "Mohammed Sadik",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Active",
-    year: "5th",
-    status: "OffCampus",
-  },
-  {
-    id: "UGR/5850/14",
-    name: "Hussein Beshir",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Needs Attention",
-    year: "3rd",
-    status: "Withdrawn",
-  },
-  {
-    id: "UGR/5340/14",
-    name: "Estifanos Tesfaye",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Inactive",
-    year: "4th",
-    status: "Withdrawn",
-  },
-  {
-    id: "UGR/2840/14",
-    name: "Mahelet Yared",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Needs Attention",
-    year: "5th",
-    status: "Withdrawn",
-  },
-  {
-    id: "UGR/1800/14",
-    name: "Kiya Kebe",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Active",
-    year: "4th",
-    status: "OnCampus",
-  },
-  {
-    id: "UGR/1870/14",
-    name: "Mohammed Sadik",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Active",
-    year: "5th",
-    status: "OffCampus",
-  },
-  {
-    id: "UGR/1850/14",
-    name: "Hussein Beshir",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Needs Attention",
-    year: "3rd",
-    status: "Withdrawn",
-  },
-  {
-    id: "UGR/1340/14",
-    name: "Estifanos Tesfaye",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Inactive",
-    year: "4th",
-    status: "Withdrawn",
-  },
-  {
-    id: "UGR/1840/14",
-    name: "Mahelet Yared",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Needs Attention",
-    year: "5th",
-    status: "Withdrawn",
-  },
-];
+import { MembersTable } from "@/components/pages/alldivisions/groups/members/GroupMembersTable";
 
 export default function TableUsage() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -126,8 +39,7 @@ export default function TableUsage() {
             />
             <div>
               {/* Table */}
-              <MembersTable members={sampleMembers} />
-
+              <MembersTable apiMembers={[]} />
               {/* Pagination */}
               <TablePagination
                 currentPage={currentPage}

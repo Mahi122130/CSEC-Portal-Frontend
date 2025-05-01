@@ -1,6 +1,6 @@
 "use client";
 
-import GroupOverview from "@/components/common/GroupOverview";
+import GroupOverview from "@/components/pages/attendance/groups/GroupOverview";
 import { TableFilter } from "@/components/common/TableFilter";
 
 export default function TableUsage() {

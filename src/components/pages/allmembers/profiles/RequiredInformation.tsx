@@ -1,4 +1,75 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import api from "@/lib/axios";
+import Cookies from "js-cookie";
+
+interface MemberData {
+  _id: string;
+  email: string;
+  role: string;
+  personal_info?: {
+    first_name?: string;
+    last_name?: string;
+    gender?: string;
+    birth_date?: string;
+    phone_number?: string;
+    telegram_handle?: string;
+    github_handle?: string;
+    department?: string;
+    specialization?: string;
+    mentor?: string;
+    university_id?: string;
+    graduation_year?: number;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 export function RequiredInformation() {
+  const [member, setMember] = useState<MemberData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMemberData = async () => {
+      try {
+        const token = Cookies.get('accessToken');
+        if (!token) return;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const memberId = urlParams.get('id');
+        
+        if (!memberId) return;
+
+        const response = await api.get(`/user/${memberId}`, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'ngrok-skip-browser-warning': 'true'
+          },
+          withCredentials: false
+        });
+
+        if (response.data?.user) {
+          setMember(response.data.user);
+        }
+      } catch (error) {
+        console.error("Failed to fetch member data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMemberData();
+  }, []);
+
+  if (loading) {
+    return <div className="p-4">Loading...</div>;
+  }
+
+  if (!member) {
+    return <div className="p-4">Member not found</div>;
+  }
+
   return (
     <div>
       <div className="flex flex-wrap gap-8" style={{marginTop: "10px"}}>
@@ -8,7 +79,9 @@ export function RequiredInformation() {
             <span className="text-sm font-medium text-gray-500">
               First Name
             </span>
-            <span className="text-gray-800 font-medium">Henok</span>
+            <span className="text-gray-800 font-medium">
+              {member.personal_info?.first_name || "N/A"}
+            </span>
             <div className="w-full border-b border-gray-300"></div>
           </div>
 
@@ -17,7 +90,7 @@ export function RequiredInformation() {
               Mobile Number
             </span>
             <span className="text-gray-800 font-medium">
-              (+251)-955-012-234
+              {member.personal_info?.phone_number || "N/A"}
             </span>
             <div className="w-full border-b border-gray-300"></div>
           </div>
@@ -26,13 +99,20 @@ export function RequiredInformation() {
             <span className="text-sm font-medium text-gray-500">
               Date of Birth
             </span>
-            <span className="text-gray-800 font-medium">July 14, 1995</span>
+            <span className="text-gray-800 font-medium">
+              {member.personal_info?.birth_date ? 
+                new Date(member.personal_info.birth_date).toLocaleDateString() : "N/A"}
+            </span>
             <div className="w-full border-b border-gray-300"></div>
           </div>
 
           <div className="flex flex-col gap-1" style={{ marginBottom: "20px" }}>
             <span className="text-sm font-medium text-gray-500">Gender</span>
-            <span className="text-gray-800 font-medium">Male</span>
+            <span className="text-gray-800 font-medium">
+              {member.personal_info?.gender ? 
+                member.personal_info.gender.charAt(0).toUpperCase() + 
+                member.personal_info.gender.slice(1) : "N/A"}
+            </span>
             <div className="w-full border-b border-gray-300"></div>
           </div>
 
@@ -40,7 +120,9 @@ export function RequiredInformation() {
             <span className="text-sm font-medium text-gray-500">
               Expected Graduation Year
             </span>
-            <span className="text-gray-800 font-medium">2026</span>
+            <span className="text-gray-800 font-medium">
+              {member.personal_info?.graduation_year || "N/A"}
+            </span>
             <div className="w-full border-b border-gray-300"></div>
           </div>
 
@@ -49,7 +131,7 @@ export function RequiredInformation() {
               Department
             </span>
             <span className="text-gray-800 font-medium">
-              Computer Science And Engineering
+              {member.personal_info?.department || "N/A"}
             </span>
           </div>
         </div>
@@ -58,7 +140,9 @@ export function RequiredInformation() {
         <div className="flex-1 min-w-[250px] flex flex-col gap-4">
           <div className="flex flex-col gap-1 my-5">
             <span className="text-sm font-medium text-gray-500">Last Name</span>
-            <span className="text-gray-800 font-medium">Assefa</span>
+            <span className="text-gray-800 font-medium">
+              {member.personal_info?.last_name || "N/A"}
+            </span>
             <div className="w-full border-b border-gray-300"></div>
           </div>
 
@@ -66,17 +150,20 @@ export function RequiredInformation() {
             <span className="text-sm font-medium text-gray-500">
               Email Address
             </span>
-            <span className="text-gray-800 font-medium">Henok@example.com</span>
+            <span className="text-gray-800 font-medium">{member.email}</span>
             <div className="w-full border-b border-gray-300"></div>
           </div>
 
           <div className="flex flex-col gap-1" style={{ marginBottom: "20px" }}>
             <span className="text-sm font-medium text-gray-500">Github</span>
             <a
-              href="https://github.com/henabakos"
+              href={`https://github.com/${member.personal_info?.github_handle}`}
               className="text-blue-600 hover:underline font-medium"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              github.com/henabakos
+              {member.personal_info?.github_handle ? 
+                `github.com/${member.personal_info.github_handle}` : "N/A"}
             </a>
             <div className="w-full border-b border-gray-300"></div>
           </div>
@@ -85,7 +172,9 @@ export function RequiredInformation() {
             <span className="text-sm font-medium text-gray-500">
               Telegram Handle
             </span>
-            <span className="text-gray-800 font-medium">@henok_1</span>
+            <span className="text-gray-800 font-medium">
+              {member.personal_info?.telegram_handle || "N/A"}
+            </span>
             <div className="w-full border-b border-gray-300"></div>
           </div>
 
@@ -94,14 +183,16 @@ export function RequiredInformation() {
               Specialization
             </span>
             <span className="text-gray-800 font-medium">
-              Full-stack development, UI/UX design
+              {member.personal_info?.specialization || "N/A"}
             </span>
             <div className="w-full border-b border-gray-300"></div>
           </div>
 
           <div className="flex flex-col gap-1 pb-5">
-            <span className="text-sm font-medium text-gray-500">Mentor</span>
-            <span className="text-gray-800 font-medium">Kiya Kebe</span>
+            <span className="text-sm font-medium text-gray-500">University ID</span>
+            <span className="text-gray-800 font-medium">
+              {member.personal_info?.university_id || "N/A"}
+            </span>
           </div>
         </div>
       </div>
