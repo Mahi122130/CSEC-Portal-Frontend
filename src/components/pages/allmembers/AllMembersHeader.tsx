@@ -16,6 +16,7 @@ interface MemberData {
     university_id?: string;
     graduation_year?: number;
     phone_number?: string;
+    specialization?: string;
   };
   createdAt: string;
   updatedAt: string;
@@ -24,6 +25,7 @@ interface MemberData {
 export function ProfileHeader() {
   const [member, setMember] = useState<MemberData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastSeen, setLastSeen] = useState<string>("");
 
   useEffect(() => {
     const fetchMemberData = async () => {
@@ -47,11 +49,34 @@ export function ProfileHeader() {
         if (response.data?.user) {
           setMember(response.data.user);
         }
+
+        const lastSeenResponse = await api.get(`/user/${memberId}/last-seen`, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'ngrok-skip-browser-warning': 'true'
+          },
+          withCredentials: false
+        });
+
+        if (lastSeenResponse.data?.lastSeen) {
+          const now = new Date();
+          const lastSeenDate = new Date(lastSeenResponse.data.lastSeen);
+          const diffInSeconds = Math.floor((now.getTime() - lastSeenDate.getTime()) / 1000);
+          setLastSeen(diffInSeconds < 120 ? "online" : formatDate(lastSeenDate));
+        }
       } catch (error) {
         console.error("Failed to fetch member data:", error);
       } finally {
         setLoading(false);
       }
+    };
+
+    const formatDate = (date: Date): string => {
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
     };
 
     fetchMemberData();
@@ -68,12 +93,6 @@ export function ProfileHeader() {
   const fullName = member.personal_info?.first_name || member.personal_info?.last_name
     ? `${member.personal_info.first_name || ""} ${member.personal_info.last_name || ""}`.trim()
     : member.email.split("@")[0];
-
-  const lastSeen = new Date(member.updatedAt).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  });
 
   return (
     <div className="flex justify-center relative h-54 rounded-[8px] w-full">
@@ -101,9 +120,13 @@ export function ProfileHeader() {
             <div className="flex gap-5 text-white" style={{ marginBottom: "22px" }}>
               <div>
                 <h2 className="font-semibold text-2xl">{fullName}</h2>
-                <p className="text-[16px] opacity-90 capitalize">{member.role}</p>
+                <p className="text-[16px] opacity-90 capitalize">{member.personal_info?.specialization}</p>
               </div>
-              <p className="flex items-end text-sm opacity-90">last seen {lastSeen}</p>
+              {lastSeen === "online" ? (
+                <p className="flex items-end text-sm  text-green-400 font-medium">online</p>
+              ) : (
+                <p className="flex items-end text-sm opacity-90">last seen {lastSeen || "recently"}</p>
+              )}
             </div>
           </div>
         </div>

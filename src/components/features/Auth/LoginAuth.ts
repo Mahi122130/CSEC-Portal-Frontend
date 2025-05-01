@@ -23,7 +23,7 @@ export async function handleLogin(data: FormData) {
     const user = responseData.user || null;
 
     if (!accessToken && !role) {
-      throw new Error("Missing access token or role from server.");
+      throw new Error("Invalid Credential");
     }
 
     // Build cookie options

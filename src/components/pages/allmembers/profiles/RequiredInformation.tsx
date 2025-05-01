@@ -33,20 +33,20 @@ export function RequiredInformation() {
   useEffect(() => {
     const fetchMemberData = async () => {
       try {
-        const token = Cookies.get('accessToken');
+        const token = Cookies.get("accessToken");
         if (!token) return;
 
         const urlParams = new URLSearchParams(window.location.search);
-        const memberId = urlParams.get('id');
-        
+        const memberId = urlParams.get("id");
+
         if (!memberId) return;
 
         const response = await api.get(`/user/${memberId}`, {
-          headers: { 
+          headers: {
             Authorization: `Bearer ${token}`,
-            'ngrok-skip-browser-warning': 'true'
+            "ngrok-skip-browser-warning": "true",
           },
-          withCredentials: false
+          withCredentials: false,
         });
 
         if (response.data?.user) {
@@ -72,7 +72,7 @@ export function RequiredInformation() {
 
   return (
     <div>
-      <div className="flex flex-wrap gap-8" style={{marginTop: "10px"}}>
+      <div className="flex flex-wrap gap-8" style={{ marginTop: "10px" }}>
         {/* Left Column */}
         <div className="flex-1 min-w-[250px] flex flex-col gap-4">
           <div className="flex flex-col gap-1 my-5">
@@ -100,8 +100,9 @@ export function RequiredInformation() {
               Date of Birth
             </span>
             <span className="text-gray-800 font-medium">
-              {member.personal_info?.birth_date ? 
-                new Date(member.personal_info.birth_date).toLocaleDateString() : "N/A"}
+              {member.personal_info?.birth_date
+                ? new Date(member.personal_info.birth_date).toLocaleDateString()
+                : "N/A"}
             </span>
             <div className="w-full border-b border-gray-300"></div>
           </div>
@@ -109,9 +110,10 @@ export function RequiredInformation() {
           <div className="flex flex-col gap-1" style={{ marginBottom: "20px" }}>
             <span className="text-sm font-medium text-gray-500">Gender</span>
             <span className="text-gray-800 font-medium">
-              {member.personal_info?.gender ? 
-                member.personal_info.gender.charAt(0).toUpperCase() + 
-                member.personal_info.gender.slice(1) : "N/A"}
+              {member.personal_info?.gender
+                ? member.personal_info.gender.charAt(0).toUpperCase() +
+                  member.personal_info.gender.slice(1)
+                : "N/A"}
             </span>
             <div className="w-full border-b border-gray-300"></div>
           </div>
@@ -156,15 +158,18 @@ export function RequiredInformation() {
 
           <div className="flex flex-col gap-1" style={{ marginBottom: "20px" }}>
             <span className="text-sm font-medium text-gray-500">Github</span>
-            <a
-              href={`https://github.com/${member.personal_info?.github_handle}`}
-              className="text-blue-600 hover:underline font-medium"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {member.personal_info?.github_handle ? 
-                `github.com/${member.personal_info.github_handle}` : "N/A"}
-            </a>
+            {member.personal_info?.github_handle ? (
+              <a
+                href={`https://github.com/${member.personal_info.github_handle}`}
+                className="text-blue-600 hover:underline font-medium"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                github.com/{member.personal_info.github_handle}
+              </a>
+            ) : (
+              <span className="text-gray-800 font-medium">N/A</span>
+            )}
             <div className="w-full border-b border-gray-300"></div>
           </div>
 
@@ -189,7 +194,9 @@ export function RequiredInformation() {
           </div>
 
           <div className="flex flex-col gap-1 pb-5">
-            <span className="text-sm font-medium text-gray-500">University ID</span>
+            <span className="text-sm font-medium text-gray-500">
+              University ID
+            </span>
             <span className="text-gray-800 font-medium">
               {member.personal_info?.university_id || "N/A"}
             </span>
