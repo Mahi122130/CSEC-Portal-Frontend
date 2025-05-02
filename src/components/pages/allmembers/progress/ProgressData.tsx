@@ -2,28 +2,125 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import CircularProgress from "@/components/pages/allmembers/progress/CircularProgress";
+import { useEffect, useState } from "react";
+import api from "@/lib/axios";
+import Cookies from "js-cookie";
 
 interface AttendanceProgressProps {
-  overallProgress: number;
-  metrics: {
-    leftMetric: number;
-    rightMetric: number;
-    Headsup: number;
-    Absent: number;
-    Present: number;
-  };
+  id: string;
 }
 
-export default function AttendanceProgress({
-  overallProgress = 75,
-  metrics = {
-    leftMetric: 28,
-    rightMetric: 56,
+interface AttendanceData {
+  total: number;
+  data: {
+    status: "present" | "absent";
+  }[];
+}
+
+interface HeadsUpData {
+  _id: string;
+  profile: string;
+  session: string;
+  reason: string;
+  status: "pending" | "approved";
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+export default function AttendanceProgress({ id }: AttendanceProgressProps) {
+  const [loading, setLoading] = useState(true);
+  const [metrics, setMetrics] = useState({
+    leftMetric: 0,
+    rightMetric: 0,
     Headsup: 0,
-    Absent: 3,
-    Present: 7,
-  },
-}: AttendanceProgressProps) {
+    Absent: 0,
+    Present: 0,
+  });
+  const [overallProgress, setOverallProgress] = useState(0);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = Cookies.get('accessToken');
+        if (!token) return;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const memberId = urlParams.get("id") || id;
+
+        if (!memberId) return;
+
+        // Fetch attendance data
+        const attendanceResponse = await api.get(`attendance/${memberId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+          withCredentials: false,
+        });
+
+        // Fetch headsUp data
+        const headsUpResponse = await api.get(`headsUp/user/${memberId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+          withCredentials: false,
+        });
+
+        const attendanceData: AttendanceData = attendanceResponse.data;
+        const headsUpData: HeadsUpData[] = headsUpResponse.data;
+
+        // Count approved headsUp requests
+        const approvedHeadsUpCount = headsUpData.filter(
+          item => item.status === "approved"
+        ).length;
+
+        // Calculate counts for each status
+        const counts = {
+          Headsup: approvedHeadsUpCount,
+          Absent: attendanceData.data.filter(item => item.status === "absent").length,
+          Present: attendanceData.data.filter(item => item.status === "present").length,
+        };
+
+        // Calculate overall progress percentage
+        const totalSessions = attendanceData.total;
+        const attendedSessions = counts.Present + (counts.Headsup * 0.5); // Count heads-up as half attendance
+        const progress = totalSessions > 0 
+          ? Math.round((attendedSessions / (totalSessions + counts.Headsup)) * 100) 
+          : 0;
+
+        const weeklyChange = 5; 
+        const monthlyChange = 10; 
+
+        setMetrics({
+          leftMetric: weeklyChange,
+          rightMetric: monthlyChange,
+          ...counts
+        });
+        setOverallProgress(progress);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="w-auto my-5 mr-15">
+        <div className="flex flex-col w-80 items-center border-2 border-gray-300 rounded-md my-3 p-3">
+          <h3 className="flex justify-center text-lg font-semibold">
+            Loading attendance data...
+          </h3>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-auto my-5 mr-15">
       <div className="flex flex-col w-80 items-center border-2 border-gray-300 rounded-md my-3 p-3">

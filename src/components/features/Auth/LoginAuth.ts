@@ -16,40 +16,30 @@ export async function handleLogin(data: FormData) {
       credentials: "include",
     });
 
-    const responseData = await response.json();
-    const accessToken = responseData.accessToken;
-    const refreshToken = responseData.refreshToken || null;
-    const role = responseData.user?.role || null;
-    const user = responseData.user || null;
-
-    if (!accessToken && !role) {
-      throw new Error("Invalid Credential");
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Login failed");
     }
 
-    // Build cookie options
-    const cookieOptions = {
-      secure: process.env.NODE_ENV === 'production',
-      ...(data.rememberMe ? { expires: 7 } : {}),
-    };
+    const responseData = await response.json();
+    const { accessToken, refreshToken, user } = responseData;
+    const role = user?.role || null;
 
-    // Set cookies
-    Cookies.set('accessToken', accessToken, cookieOptions);
-    Cookies.set('refreshToken', refreshToken, cookieOptions);
-    Cookies.set('role', role, cookieOptions);
+    Cookies.set('accessToken', accessToken);
+    if (refreshToken) {
+      Cookies.set('refreshToken', refreshToken);
+    }
+    if (role) {
+      Cookies.set('role', role);
+    }
 
-    // Store only the user object in localStorage
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
     }
 
-    return {
-      success: true,
-      data: responseData,
-    };
+    return { success: true, data: responseData };
   } catch (error) {
-    console.log("Login failed:", error);
-    // Clear user data on error
-    localStorage.removeItem('user');
+    console.log("Login error:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Login failed. Please try again.",

@@ -91,7 +91,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   };
   
   return (
-    <div className="flex h-full p-2">
+    <div className="flex h-full p-2 ml-1 mt-1">
       <Sidebar {...props} collapsible="offcanvas" className="flex justify-center">
         <div className="flex flex-col gap-5 bg-[#34495E0D] rounded-2xl w-58 h-auto">
           <SidebarHeader className="pt-5">
@@ -120,7 +120,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarContent>
           <div>
             <SidebarFooter>
-              <div className="flex justify-center gap-3 mt-10 p-5">
+              <div className="flex justify-center gap-3 mt-25 p-5">
                 <div className="flex gap-3 items-center justify-center">
                   <Button
                     variant="outline"
