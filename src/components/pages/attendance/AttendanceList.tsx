@@ -107,7 +107,7 @@ export default function AttendanceList() {
   };
 
   const handleCardClick = (sessionId: string) => {
-    router.push(`/attendance/${sessionId}`);
+    router.push(`/dashboard/attendance/group/?id=${sessionId}`);
   };
 
   if (loading) {

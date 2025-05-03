@@ -1,7 +1,6 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { HeadsupDialog } from "./HeadsupDialog";
 
@@ -75,7 +74,6 @@ export default function AttendanceTable() {
         delete newStatus[id];
         return newStatus;
       }
-      // Otherwise set the new status
       return {
         ...prev,
         [id]: status,
