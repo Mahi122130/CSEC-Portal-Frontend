@@ -74,6 +74,11 @@ export default function SessionCalendar() {
   const monthEnd = endOfMonth(currentMonth);
   const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
+  // Create a Set of dates that have sessions
+  const sessionDates = new Set(
+    sessions.map(session => format(parseISO(session.date), 'yyyy-MM-dd'))
+  );
+
   const groupedSessions = sessions.reduce((acc, session) => {
     const sessionDate = parseISO(session.date);
     if (!isSameMonth(sessionDate, currentMonth)) return acc;
@@ -98,7 +103,7 @@ export default function SessionCalendar() {
   const datesGrid = Array(weeksInMonth).fill([]).map((_, weekIndex) => {
     return Array(7).fill(null).map((_, dayIndex) => {
       const dayOffset = weekIndex * 7 + dayIndex - startDay;
-      return dayOffset >= 0 && dayOffset < daysInMonth ? monthDays[dayOffset].getDate() : null;
+      return dayOffset >= 0 && dayOffset < daysInMonth ? monthDays[dayOffset] : null;
     });
   });
 
@@ -127,10 +132,10 @@ export default function SessionCalendar() {
               <Button 
                 variant="outline" 
                 size="icon" 
-                className="h-7 w-7 bg-blue-700"
+                className="h-7 w-7 bg-[#003087]"
                 onClick={handlePrevMonth}
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4" color="white" />
               </Button>
               <div className="font-medium">
                 {format(currentMonth, 'MMMM, yyyy')}
@@ -138,10 +143,10 @@ export default function SessionCalendar() {
               <Button 
                 variant="outline" 
                 size="icon" 
-                className="h-7 w-7 bg-blue-700"
+                className="h-7 w-7 bg-[#003087]"
                 onClick={handleNextMonth}
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4" color="white" />
               </Button>
             </div>
           </div>
@@ -160,12 +165,13 @@ export default function SessionCalendar() {
                   key={i}
                   className={cn(
                     "aspect-square flex items-center justify-center rounded-full",
-                    date === new Date().getDate() && isSameMonth(new Date(), currentMonth) && "bg-blue-600 text-white",
-                    date === null && "invisible",
-                    date !== null && !(date === new Date().getDate() && isSameMonth(new Date(), currentMonth)) && "hover:bg-muted",
+                    date && isSameDay(date, new Date()) && "bg-[#003087] text-white",
+                    !date && "invisible",
+                    date && sessionDates.has(format(date, 'yyyy-MM-dd')) && !isSameDay(date, new Date()) && "bg-[#002f876c]",
+                    date && !sessionDates.has(format(date, 'yyyy-MM-dd')) && !isSameDay(date, new Date()) && "hover:bg-muted",
                   )}
                 >
-                  {date}
+                  {date && format(date, 'd')}
                 </div>
               ))}
             </div>

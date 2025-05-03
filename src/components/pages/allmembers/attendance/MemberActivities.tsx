@@ -168,7 +168,6 @@ function ActivityTable() {
           <TableHead className="text-gray-500">Start-Time</TableHead>
           <TableHead className="text-gray-500">End-Time</TableHead>
           <TableHead className="text-gray-500">Status</TableHead>
-          <TableHead className="text-gray-500">Source</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

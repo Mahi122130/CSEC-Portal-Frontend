@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
   const role = request.cookies.get('role')?.value;
 
   // Only require accessToken, not role, to match client-side checks
-  if (!accessToken || isTokenExpired(accessToken)) {
+  if (!accessToken) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', path);
     return NextResponse.redirect(loginUrl);

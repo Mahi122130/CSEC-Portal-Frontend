@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const token = Cookies.get('accessToken');
       const savedRole = Cookies.get('role');
 
-      if (token && savedRole && !isTokenExpired(token)) {
+      if (token && savedRole) {
         setAccessToken(token);
         setRole(savedRole);
         setIsAuthenticated(true);

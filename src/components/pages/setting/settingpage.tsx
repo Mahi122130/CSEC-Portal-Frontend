@@ -19,20 +19,9 @@ export default function SettingsPage() {
 
   return (
     <div className={`flex flex-col h-screen ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50'}`}>
-      {/* Header */}
-      <header className={`border-b ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} p-4`}>
-        <div>
-          <h1 className="text-xl font-semibold">Settings</h1>
-          <div className="flex items-center text-sm">
-            <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}>All Settings</span>
-            <ChevronRight className="h-4 w-4 ml-1" />
-          </div>
-        </div>
-      </header>
-
       {/* Settings content */}
-      <div className="p-6 flex-1 overflow-auto">
-        <div className="max-w-3xl">
+      <div className="p-4 mx-3 flex-1 overflow-auto">
+        <div className="w-full">
           {/* Appearance Setting with Theme button */}
           <div className={`py-4 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'} flex justify-between items-center`}>
             <div>
