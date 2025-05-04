@@ -20,8 +20,8 @@ export default function MembersPage() {
   const itemsPerPage = 6;
 
   useEffect(() => {
-    const role = Cookies.get('role');
-    setCanAddMembers(!!role && role !== 'member');
+    const role = Cookies.get("role");
+    setCanAddMembers(!!role && role !== "member");
     fetchMembers();
   }, [currentPage, refreshKey]);
 
@@ -29,19 +29,19 @@ export default function MembersPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const token = Cookies.get('accessToken');
+      const token = Cookies.get("accessToken");
       if (!token) {
-        setError('Please login again to view members');
+        setError("Please login again to view members");
         setIsLoading(false);
         return;
       }
 
-      const response = await api.get('/user', {
-        headers: { 
+      const response = await api.get("/user", {
+        headers: {
           Authorization: `Bearer ${token}`,
-          'ngrok-skip-browser-warning': 'true'
+          "ngrok-skip-browser-warning": "true",
         },
-        withCredentials: false
+        withCredentials: false,
       });
 
       if (Array.isArray(response.data)) {
@@ -51,7 +51,7 @@ export default function MembersPage() {
         setAllMembers(response.data.data);
         setTotalItems(response.data.total || response.data.data.length);
       } else {
-        setError('Received unexpected data format from server');
+        setError("Received unexpected data format from server");
       }
     } catch (error: any) {
       setError(error.message || "Failed to fetch members");
@@ -71,7 +71,7 @@ export default function MembersPage() {
   const filteredMembers = useMemo(() => {
     if (!searchQuery) return allMembers;
     const query = searchQuery.toLowerCase();
-    return allMembers.filter(member => {
+    return allMembers.filter((member) => {
       const displayName = getMemberDisplayName(member).toLowerCase();
       return displayName.includes(query);
     });
@@ -97,11 +97,11 @@ export default function MembersPage() {
   };
 
   const handleMemberAdded = () => {
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
   };
 
   const handleDeleteSuccess = () => {
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
   };
 
   if (isLoading) {
@@ -114,7 +114,7 @@ export default function MembersPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
+      <div className="flex flex-col items-center justify-center h-[100vh] gap-4">
         <div className="text-red-500 text-center max-w-md">{error}</div>
         <Button
           onClick={handleRetry}
@@ -127,35 +127,33 @@ export default function MembersPage() {
   }
 
   return (
-    <div className="flex flex-col h-full min-w-240 max-w-full mr-5 my-3 gap-4 rounded-[8px] border-1 border-gray-300">
-      <div className="flex">
-        <div className="flex-1 gap-3 flex flex-col p-2">
-          <main className="flex-1 flex flex-col gap-6">
-            <div>
-              <TableFilter
-                onSearch={handleSearch}
-                onFilter={() => console.log("Filter clicked")}
-                placeholder="Search members..."
-                addMembersButton={canAddMembers}
+    <div className="flex flex-col h-full min-w-240 max-w-full mr-5 my-2 gap-4 rounded-[8px] border-1 border-gray-300">
+      <div className="flex-1 gap-3 flex flex-col p-4 mt-2">
+        <main className="flex-1 flex flex-col gap-6">
+          <div>
+            <TableFilter
+              onSearch={handleSearch}
+              onFilter={() => console.log("Filter clicked")}
+              placeholder="Search members..."
+              addMembersButton={canAddMembers}
+            />
+          </div>
+          <div>
+            <MembersTable
+              apiMembers={paginatedMembers}
+              onDeleteSuccess={handleDeleteSuccess}
+            />
+            {allMembers.length > 0 && (
+              <TablePagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(filteredMembers.length / itemsPerPage)}
+                totalItems={filteredMembers.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={handlePageChange}
               />
-            </div>
-            <div>
-              <MembersTable 
-                apiMembers={paginatedMembers} 
-                onDeleteSuccess={handleDeleteSuccess} 
-              />
-              {allMembers.length > 0 && (
-                <TablePagination
-                  currentPage={currentPage}
-                  totalPages={Math.ceil(filteredMembers.length / itemsPerPage)}
-                  totalItems={filteredMembers.length}
-                  itemsPerPage={itemsPerPage}
-                  onPageChange={handlePageChange}
-                />
-              )}
-            </div>
-          </main>
-        </div>
+            )}
+          </div>
+        </main>
       </div>
     </div>
   );
