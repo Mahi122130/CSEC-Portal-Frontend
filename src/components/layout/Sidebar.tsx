@@ -4,7 +4,7 @@ import Img from "next/image";
 import Logoipsum from "@/components/icons/images/Logoipsum.png";
 import { useTheme } from "next-themes";
 import type * as React from "react";
-import { usePathname } from "next/navigation"; // Add this import
+import { usePathname, useRouter } from "next/navigation";
 import {
   Users,
   Layers,
@@ -17,7 +17,6 @@ import {
   Moon,
   Sun,
 } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -31,6 +30,8 @@ import {
 } from "@/components/ui/sidebar";
 import { DashboardIcon } from "../icons/dashboard-icon";
 import Link from "next/link";
+import Cookies from "js-cookie";
+import { useEffect, useState } from "react";
 
 const navigationItems = [
   {
@@ -83,29 +84,42 @@ const navigationItems = [
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { setTheme } = useTheme();
   const pathname = usePathname();
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const role = Cookies.get('role');
+    setUserRole(role || null);
+  }, []);
+
   const isActive = (itemUrl: string) => {
     if (itemUrl === "/dashboard") {
       return pathname === "/dashboard";
     }
     return pathname.startsWith(itemUrl);
   };
+
+  const filteredNavigationItems = navigationItems.filter(item => 
+    item.title !== "Administration" || userRole === "president"
+  );
+  
+  const route = useRouter();
   
   return (
     <div className="flex h-full p-2 ml-1 mt-1">
       <Sidebar {...props} collapsible="offcanvas" className="flex justify-center">
         <div className="flex flex-col gap-5 bg-[#34495E0D] rounded-2xl w-58 h-auto">
           <SidebarHeader className="pt-5">
-            <div className="flex items-end justify-center gap-2">
+            <div className="flex items-end justify-center gap-2 cursor-pointer" onClick={() => route.push("/dashboard")}>
               <Img src={Logoipsum} alt="Logo icon and name" />
             </div>
           </SidebarHeader>
           <SidebarContent className="pl-8">
             <SidebarMenu className="mt-2 gap-2">
-              {navigationItems.map((item) => (
+              {filteredNavigationItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
-                    isActive={isActive(item.url)} // Dynamic active state
+                    isActive={isActive(item.url)}
                     className="flex items-center px-4 py-2.5 gap-2"
                     tooltip={item.title}
                   >

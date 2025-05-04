@@ -5,16 +5,14 @@ const PUBLIC_ROUTES = ['/', '/login', '/_next', '/favicon.ico'];
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  
-  if (PUBLIC_ROUTES.some(route => path.startsWith(route))) {
+
+  if (PUBLIC_ROUTES.some(route => path === route || path.startsWith(route))) {
     return NextResponse.next();
   }
 
   const accessToken = request.cookies.get('accessToken')?.value;
-  const role = request.cookies.get('role')?.value;
 
-  // Only require accessToken, not role, to match client-side checks
-  if (!accessToken) {
+  if (!accessToken || isTokenExpired(accessToken)) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', path);
     return NextResponse.redirect(loginUrl);
@@ -24,7 +22,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)']
+  matcher: ['/((?!api|_next|favicon.ico).*)'],
 };
 
 function isTokenExpired(token: string) {

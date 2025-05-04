@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 import api from "@/lib/axios";
 import Cookies from "js-cookie";
 import { format } from "date-fns";
+import { useRouter } from "next/navigation";
 
 interface User {
   _id: string;
@@ -108,8 +109,6 @@ export default function UpcomingEvent() {
           }),
         ]);
 
-        /// In the fetchData function, modify the users filtering part:
-
         // Process data
         const users = usersResponse.data.data;
         const divisions = divisionsResponse.data.data;
@@ -118,10 +117,8 @@ export default function UpcomingEvent() {
         const headsUpRecords = headsUpResponse.data;
 
         // Calculate metrics
-        const memberCount = users.length; // Changed from filtering to counting all users
+        const memberCount = users.length; 
         const divisionCount = divisions.length;
-
-        // Rest of the code remains the same...
 
         // Calculate attendance rate
         const presentCount = attendanceRecords.filter(
@@ -151,15 +148,51 @@ export default function UpcomingEvent() {
         setAttendanceRate(rate);
         setUpcomingSessions(upcoming);
 
-        // Generate chart data (sample - you can replace with real data)
-        setChartData([
-          { name: "Jan", thisYear: 65, lastYear: 45 },
-          { name: "Feb", thisYear: 59, lastYear: 51 },
-          { name: "Mar", thisYear: 80, lastYear: 65 },
-          { name: "Apr", thisYear: 81, lastYear: 60 },
-          { name: "May", thisYear: presentCount > 0 ? rate : 76, lastYear: 57 },
-          { name: "Jun", thisYear: 85, lastYear: 62 },
-        ]);
+        // Generate dynamic chart data based on actual attendance
+        const currentMonth = new Date().getMonth();
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        
+        // Get attendance by month for this year
+        const thisYearData = Array(12).fill(0);
+        const lastYearData = Array(12).fill(0);
+        
+        attendanceRecords.forEach((record: Attendance) => {
+          const date = new Date(record.sessionDate);
+          const month = date.getMonth();
+          const year = date.getFullYear();
+          
+          if (year === new Date().getFullYear()) {
+            if (record.status === "present") {
+              thisYearData[month]++;
+            }
+          } else if (year === new Date().getFullYear() - 1) {
+            if (record.status === "present") {
+              lastYearData[month]++;
+            }
+          }
+        });
+
+        // Calculate percentages for each month
+        const chartData = months.slice(0, currentMonth + 1).map((month, index) => {
+          const thisYearPresent = thisYearData[index];
+          const lastYearPresent = lastYearData[index];
+          const thisYearTotal = attendanceRecords.filter((r: Attendance) => {
+            const date = new Date(r.sessionDate);
+            return date.getMonth() === index && date.getFullYear() === new Date().getFullYear();
+          }).length;
+          const lastYearTotal = attendanceRecords.filter((r: Attendance) => {
+            const date = new Date(r.sessionDate);
+            return date.getMonth() === index && date.getFullYear() === new Date().getFullYear() - 1;
+          }).length;
+
+          return {
+            name: month,
+            thisYear: thisYearTotal > 0 ? Math.round((thisYearPresent / thisYearTotal) * 100) : 0,
+            lastYear: lastYearTotal > 0 ? Math.round((lastYearPresent / lastYearTotal) * 100) : 0
+          };
+        });
+
+        setChartData(chartData);
       } catch (error) {
         console.error("Failed to fetch data:", error);
       } finally {
@@ -169,6 +202,8 @@ export default function UpcomingEvent() {
 
     fetchData();
   }, []);
+
+  const route = useRouter();
 
   if (loading) {
     return (
@@ -198,7 +233,7 @@ export default function UpcomingEvent() {
     <Card className="overflow-hidden w-full">
       <CardHeader className="w-full p-4">
         <div className="bg-blue-400 p-5 relative w-auto h-60 rounded-2xl">
-          <div className="absolute w-19 h-5 top-5 right-5 bg-[#ff5c5c] text-white text-xs font-medium px-2 py-0.5 rounded-full">
+          <div className="flex justify-center absolute w-19 h-5 top-5 right-5 bg-[#ff5c5c] text-white text-xs font-medium px-2 py-0.5 rounded-full cursor-pointer" onClick={() => {route.push("/dashboard/allmembers")}}>
             Members
           </div>
           <h2 className="text-xl font-bold mb-1">Upcoming Event</h2>

@@ -34,21 +34,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      const token = Cookies.get('accessToken');
-      const savedRole = Cookies.get('role');
+    const token = Cookies.get('accessToken');
+    const savedRole = Cookies.get('role');
 
-      if (token && savedRole) {
-        setAccessToken(token);
-        setRole(savedRole);
-        setIsAuthenticated(true);
-      } else {
-        await logout();
-      }
-      setLoading(false);
-    };
+    if (token && savedRole && !isTokenExpired(token)) {
+      setAccessToken(token);
+      setRole(savedRole);
+      setIsAuthenticated(true);
+    } else {
+      logout();
+    }
 
-    initializeAuth();
+    setLoading(false);
   }, []);
 
   const login = async (email: string, password: string, rememberMe: boolean) => {
@@ -56,14 +53,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { data } = await api.post('/auth/login', { email, password });
       const { accessToken, refreshToken, role } = data;
 
-      // Set cookies (keeping your existing implementation)
-      if (rememberMe) {
-        Cookies.set('accessToken', accessToken, { expires: 7 });
-        if (refreshToken) Cookies.set('refreshToken', refreshToken, { expires: 7 });
-        Cookies.set('role', role, { expires: 7 });
-      } else {
-        Cookies.set('accessToken', accessToken);
-        Cookies.set('role', role);
+      const cookieOptions = {
+        path: '/',
+        sameSite: 'lax' as const,
+        secure: process.env.NODE_ENV === 'production',
+        ...(rememberMe ? { expires: 7 } : {}),
+      };
+
+      Cookies.set('accessToken', accessToken, cookieOptions);
+      Cookies.set('role', role, cookieOptions);
+      if (refreshToken) {
+        Cookies.set('refreshToken', refreshToken, cookieOptions);
       }
 
       setAccessToken(accessToken);
@@ -71,31 +71,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsAuthenticated(true);
       router.push('/dashboard');
     } catch (error) {
-      console.log("Login error:", error);
+      console.error("Login failed:", error);
       throw error;
     }
   };
 
-  const logout = () => {
-    Cookies.remove('accessToken');
-    Cookies.remove('refreshToken');
-    Cookies.remove('role');
+  const logout = (redirect = true) => {
+    Cookies.remove('accessToken', { path: '/' });
+    Cookies.remove('refreshToken', { path: '/' });
+    Cookies.remove('role', { path: '/' });
     localStorage.removeItem('user');
     setAccessToken(null);
     setRole(null);
     setIsAuthenticated(false);
-    router.push('/login');
+    if (redirect) router.push('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      role, 
-      loading, 
-      isAuthenticated, 
-      accessToken, 
-      login, 
-      logout 
-    }}>
+    <AuthContext.Provider value={{ role, loading, isAuthenticated, accessToken, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

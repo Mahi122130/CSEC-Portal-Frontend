@@ -9,9 +9,7 @@ export async function handleLogin(data: FormData) {
   try {
     const response = await fetch(API_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...data }),
       credentials: "include",
     });
@@ -25,17 +23,17 @@ export async function handleLogin(data: FormData) {
     const { accessToken, refreshToken, user } = responseData;
     const role = user?.role || null;
 
-    Cookies.set('accessToken', accessToken);
-    if (refreshToken) {
-      Cookies.set('refreshToken', refreshToken);
-    }
-    if (role) {
-      Cookies.set('role', role);
-    }
+    const cookieOptions = {
+      path: '/',
+      sameSite: 'lax' as const,
+      secure: process.env.NODE_ENV === 'production',
+      ...(data.rememberMe ? { expires: 7 } : {}),
+    };
 
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
-    }
+    Cookies.set('accessToken', accessToken, cookieOptions);
+    if (refreshToken) Cookies.set('refreshToken', refreshToken, cookieOptions);
+    if (role) Cookies.set('role', role, cookieOptions);
+    if (user) localStorage.setItem('user', JSON.stringify(user));
 
     return { success: true, data: responseData };
   } catch (error) {
