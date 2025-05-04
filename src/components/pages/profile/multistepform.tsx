@@ -288,7 +288,11 @@ export default function MultiStepForm() {
         profile_picture_url: updatedUser.personal_info?.profile_picture || "",
         cv_link: updatedUser.personal_info?.cv_link || "",
       });
-      refreshPage();
+
+      setTimeout(() => {
+        refreshPage();
+      }, 2000); 
+
     } catch (error: any) {
       showToast(
         "Error",
@@ -325,6 +329,10 @@ export default function MultiStepForm() {
 
       const updatedUser = response.data.user;
       localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      setTimeout(() => {
+        refreshPage();
+      }, 2000); 
     } catch (error: any) {
       showToast(
         "Error",
@@ -341,14 +349,6 @@ export default function MultiStepForm() {
       setActiveTab("optional");
     } else if (activeTab === "optional") {
       setActiveTab("resources");
-    }
-  };
-
-  const handlePrevious = () => {
-    if (activeTab === "optional") {
-      setActiveTab("required");
-    } else if (activeTab === "resources") {
-      setActiveTab("optional");
     }
   };
 
