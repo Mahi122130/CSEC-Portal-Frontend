@@ -17,14 +17,15 @@ export default function MembersPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-  const itemsPerPage = 10;
+  const itemsPerPage = 6;
+
   useEffect(() => {
     const role = Cookies.get("role");
     setCanAddMembers(!!role && role !== "member");
-    fetchMembers();
-  }, [currentPage, refreshKey]);
+    fetchAllMembers();
+  }, [refreshKey]);
 
-  const fetchMembers = async () => {
+  const fetchAllMembers = async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -35,7 +36,8 @@ export default function MembersPage() {
         return;
       }
 
-      const response = await api.get(`/user?page=${currentPage}&limit=${itemsPerPage}`, {
+      // First get the total count
+      const countResponse = await api.get("/user", {
         headers: {
           Authorization: `Bearer ${token}`,
           "ngrok-skip-browser-warning": "true",
@@ -43,12 +45,38 @@ export default function MembersPage() {
         withCredentials: false,
       });
 
-      if (response.data && Array.isArray(response.data.data)) {
-        setAllMembers(response.data.data);
-        setTotalItems(response.data.total || response.data.data.length);
-      } else {
-        setError("Received unexpected data format from server");
+      const totalCount = countResponse.data?.total || 0;
+      setTotalItems(totalCount);
+
+      if (totalCount === 0) {
+        setAllMembers([]);
+        setIsLoading(false);
+        return;
       }
+
+      // Calculate how many requests we need to make
+      const totalPages = Math.ceil(totalCount / 10);
+      const requests = [];
+
+      for (let page = 1; page <= totalPages; page++) {
+        requests.push(
+          api.get(`/user?page=${page}&limit=10`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "true",
+            },
+            withCredentials: false,
+          })
+        );
+      }
+
+      // Fetch all pages in parallel
+      const responses = await Promise.all(requests);
+      const allMembersData = responses.flatMap(response => 
+        Array.isArray(response.data?.data) ? response.data.data : []
+      );
+
+      setAllMembers(allMembersData);
     } catch (error: any) {
       setError(error.message || "Failed to fetch members");
     } finally {
@@ -80,7 +108,7 @@ export default function MembersPage() {
 
   const handleRetry = () => {
     setError(null);
-    fetchMembers();
+    fetchAllMembers();
   };
 
   const handleSearch = (value: string) => {
