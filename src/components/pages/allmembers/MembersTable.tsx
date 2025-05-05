@@ -61,13 +61,19 @@ interface MembersTableProps {
   className?: string;
   onDeleteSuccess?: () => void;
   isLoading?: boolean;
+  currentPage?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export function MembersTable({ 
   apiMembers, 
   className, 
   onDeleteSuccess,
-  isLoading = false 
+  isLoading = false,
+  currentPage = 1,
+  totalPages = 1,
+  onPageChange
 }: MembersTableProps) {
   const router = useRouter();
   const currentUserRole = Cookies.get('role');
@@ -316,6 +322,31 @@ export function MembersTable({
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center mt-4">
+          <Button 
+            variant="outline" 
+            disabled={currentPage === 1 || isLoading}
+            onClick={() => onPageChange && onPageChange(currentPage - 1)}
+          >
+            Previous
+          </Button>
+          
+          <span className="text-sm text-gray-600">
+            Page {currentPage} of {totalPages}
+          </span>
+          
+          <Button 
+            variant="outline" 
+            disabled={currentPage === totalPages || isLoading}
+            onClick={() => onPageChange && onPageChange(currentPage + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

@@ -17,8 +17,7 @@ export default function MembersPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-  const itemsPerPage = 6;
-
+  const itemsPerPage = 10;
   useEffect(() => {
     const role = Cookies.get("role");
     setCanAddMembers(!!role && role !== "member");
@@ -36,7 +35,7 @@ export default function MembersPage() {
         return;
       }
 
-      const response = await api.get("/user", {
+      const response = await api.get(`/user?page=${currentPage}&limit=${itemsPerPage}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "ngrok-skip-browser-warning": "true",
@@ -44,10 +43,7 @@ export default function MembersPage() {
         withCredentials: false,
       });
 
-      if (Array.isArray(response.data)) {
-        setAllMembers(response.data);
-        setTotalItems(response.data.length);
-      } else if (Array.isArray(response.data.data)) {
+      if (response.data && Array.isArray(response.data.data)) {
         setAllMembers(response.data.data);
         setTotalItems(response.data.total || response.data.data.length);
       } else {
@@ -151,7 +147,7 @@ export default function MembersPage() {
               <TablePagination
                 currentPage={currentPage}
                 totalPages={Math.ceil(filteredMembers.length / itemsPerPage)}
-                totalItems={filteredMembers.length}
+                totalItems={totalItems}
                 itemsPerPage={itemsPerPage}
                 onPageChange={handlePageChange}
               />

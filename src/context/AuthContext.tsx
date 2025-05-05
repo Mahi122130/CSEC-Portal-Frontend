@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setRole(savedRole);
       setIsAuthenticated(true);
     } else {
-      logout();
+      logout(false);
     }
 
     setLoading(false);

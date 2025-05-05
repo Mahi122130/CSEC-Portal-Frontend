@@ -110,14 +110,14 @@ export default function UpcomingEvent() {
         ]);
 
         // Process data
-        const users = usersResponse.data.data;
+        const users = usersResponse.data;
         const divisions = divisionsResponse.data.data;
         const sessions = sessionsResponse.data;
         const attendanceRecords = attendanceResponse.data;
         const headsUpRecords = headsUpResponse.data;
 
-        // Calculate metrics
-        const memberCount = users.length; 
+        // Calculate metrics - Use total from API response instead of users.length
+        const memberCount = users.total; // Changed from users.length
         const divisionCount = divisions.length;
 
         // Calculate attendance rate
