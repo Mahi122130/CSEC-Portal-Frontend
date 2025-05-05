@@ -312,8 +312,8 @@ export default function MultiStepForm() {
       const token = Cookies.get("accessToken");
       if (!token) throw new Error("Authentication required");
 
-      const response = await api.put(
-        `/user/update-full-info/${userId}`,
+      const response = await api.post(
+        `/resource`,
         {
           resources: formData.resources.filter((r) => r.name && r.link),
         },

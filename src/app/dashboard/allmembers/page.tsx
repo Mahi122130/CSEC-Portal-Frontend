@@ -98,10 +98,14 @@ export default function MembersPage() {
 
   const handleMemberAdded = () => {
     setRefreshKey((prev) => prev + 1);
+    setCurrentPage(1);
   };
 
   const handleDeleteSuccess = () => {
     setRefreshKey((prev) => prev + 1);
+    if (paginatedMembers.length === 1 && currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
   };
 
   if (isLoading) {
@@ -130,20 +134,20 @@ export default function MembersPage() {
     <div className="flex flex-col h-full min-w-240 max-w-full mr-5 my-2 gap-4 rounded-[8px] border-1 border-gray-300">
       <div className="flex-1 gap-3 flex flex-col p-4 mt-2">
         <main className="flex-1 flex flex-col gap-6">
-          <div>
-            <TableFilter
-              onSearch={handleSearch}
-              onFilter={() => console.log("Filter clicked")}
-              placeholder="Search members..."
-              addMembersButton={canAddMembers}
-            />
-          </div>
+          <TableFilter
+            onSearch={handleSearch}
+            onFilter={() => console.log("Filter clicked")}
+            placeholder="Search members..."
+            addMembersButton={canAddMembers}
+            onMemberAdded={handleMemberAdded}
+          />
           <div>
             <MembersTable
               apiMembers={paginatedMembers}
               onDeleteSuccess={handleDeleteSuccess}
+              isLoading={isLoading}
             />
-            {allMembers.length > 0 && (
+            {filteredMembers.length > 0 && (
               <TablePagination
                 currentPage={currentPage}
                 totalPages={Math.ceil(filteredMembers.length / itemsPerPage)}

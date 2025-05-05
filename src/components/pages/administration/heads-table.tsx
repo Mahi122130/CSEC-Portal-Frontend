@@ -11,10 +11,11 @@ interface Member {
   _id: string
   user: {
     _id: string
-    name: string
-    avatar?: string
-    role: string
-  }
+    name?: string | null
+    email?: string | null
+    avatar?: string | null
+    role?: string | null
+  } | null
   division: {
     _id: string
     name: string
@@ -38,6 +39,36 @@ export default function HeadsTable() {
     return null
   }
 
+  const getAvatarFallback = (user: Member['user']) => {
+    if (!user) {
+      return (
+        <div className="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center text-white font-medium">
+          ?
+        </div>
+      )
+    }
+    
+    if (user.avatar) return null // If avatar exists, no fallback needed
+    
+    // Use first letter of name if available, otherwise first letter of email
+    const letter = user.name 
+      ? user.name.charAt(0).toUpperCase() 
+      : user.email 
+        ? user.email.charAt(0).toUpperCase() 
+        : '?'
+
+    return (
+      <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
+        {letter}
+      </div>
+    )
+  }
+
+  const getUserDisplayName = (user: Member['user']) => {
+    if (!user) return "Unknown User"
+    return user.name || user.email || "Unknown User"
+  }
+
   useEffect(() => {
     const fetchHeads = async () => {
       const token = getAuthToken()
@@ -57,7 +88,9 @@ export default function HeadsTable() {
         })
 
         if (response.data?.data) {
-          setMembers(response.data.data)
+          // Filter out any members with null user objects if needed
+          const validMembers = response.data.data.filter((member: Member) => member)
+          setMembers(validMembers)
         } else {
           throw new Error("Invalid response structure")
         }
@@ -102,8 +135,7 @@ export default function HeadsTable() {
     }
 
     try {
-      // Using DELETE endpoint with user ID
-      const response = await api.delete(`/head/${memberToDelete.user._id}`, {
+      const response = await api.delete(`/head/${memberToDelete.user?._id || ''}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'ngrok-skip-browser-warning': 'true',
@@ -111,7 +143,6 @@ export default function HeadsTable() {
         }
       })
 
-      // Remove the member from the heads list
       setMembers(members.filter(m => m._id !== memberToDelete._id))
       
       toast({
@@ -160,15 +191,19 @@ export default function HeadsTable() {
                   <td className="py-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
-                        <Image
-                          src={member.user.avatar || "/images/adminstartion.png"}
-                          alt={member.user.name || "User Avatar"}
-                          width={40}
-                          height={40}
-                          className="object-cover"
-                        />
+                        {member.user?.avatar ? (
+                          <Image
+                            src={member.user.avatar}
+                            alt={getUserDisplayName(member.user)}
+                            width={40}
+                            height={40}
+                            className="object-cover"
+                          />
+                        ) : (
+                          getAvatarFallback(member.user)
+                        )}
                       </div>
-                      <span>{member.user.name}</span>
+                      <span>{getUserDisplayName(member.user)}</span>
                     </div>
                   </td>
                   <td className="py-3">{member.division.name}</td>
@@ -204,7 +239,7 @@ export default function HeadsTable() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-full max-w-md p-6 space-y-4">
             <h2 className="text-xl font-semibold">Confirm Removal</h2>
-            <p>Are you sure you want to remove {memberToDelete.user.name} as head of {memberToDelete.division.name}?</p>
+            <p>Are you sure you want to remove {getUserDisplayName(memberToDelete.user)} as head of {memberToDelete.division.name}?</p>
             <div className="flex justify-end gap-3 pt-4">
               <button 
                 onClick={() => setShowDeleteConfirm(false)}

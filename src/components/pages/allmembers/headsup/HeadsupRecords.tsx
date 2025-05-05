@@ -8,7 +8,6 @@ interface HeadsUpItem {
   type?: string;
   reason?: string;
   createdAt: string;
-  // Add other properties as needed
 }
 
 export default function HeadsUpContent() {

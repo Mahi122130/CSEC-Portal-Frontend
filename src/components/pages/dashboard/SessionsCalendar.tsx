@@ -132,7 +132,7 @@ export default function SessionCalendar() {
               <Button 
                 variant="none" 
                 size="icon" 
-                className="h-9 w-9 bg-[#003087] rounded-[8px]"
+                className="h-7 w-7 bg-[#003087] rounded-[8px]"
                 onClick={handlePrevMonth}
               >
                 <ChevronLeft className="h-4 w-4" color="white" />
@@ -143,7 +143,7 @@ export default function SessionCalendar() {
               <Button 
                 variant="none" 
                 size="icon" 
-                className="h-9 w-9 bg-[#003087] rounded-[8px]"
+                className="h-7 w-7 bg-[#003087] rounded-[8px]"
                 onClick={handleNextMonth}
               >
                 <ChevronRight className="h-4 w-4" color="white" />

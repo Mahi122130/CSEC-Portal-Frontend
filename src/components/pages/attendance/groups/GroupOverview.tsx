@@ -1,101 +1,144 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import GroupCardComponents from "@/components/pages/attendance/groups/GroupCard";
+import api from "@/lib/axios";
+import Cookies from "js-cookie";
 
-// Group data model
-interface Group {
-  id: number;
-  name: string;
-  totalMembers: number;
-  members: Members[];
-}
-
-// Sample data
-interface Members {
-  id: number;
+interface Member {
+  id: string;
   name: string;
   speciality: string;
   imgUrl?: string;
 }
 
-const GroupsData: Group[] = [
-  {
-    id: 1,
-    name: "Group 1",
-    totalMembers: 10,
-    members: [
-      {
-        id: 1,
-        name: "Mohammed Sadik",
-        speciality: "Front-End",
-        imgUrl: "https://avatars.githubusercontent.com/u/176960856?v=4",
-      },
-      {
-        id: 2,
-        name: "Kiya Kebe",
-        speciality: "Full-Stack",
-        imgUrl:
-          "https://media.licdn.com/dms/image/v2/D4E03AQFkoyf763lEgA/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1718289469344?e=2147483647&v=beta&t=qoAMCeIxXD_kTzeUZApL6qb3mFzfjmGtB6ObIeJ_5-U",
-      },
-      {
-        id: 3,
-        name: "Mahelet Yared",
-        speciality: "UI/UX Designer",
-        imgUrl: "https://github.com/shadcn.png",
-      },
-      {
-        id: 4,
-        name: "Hussen Beshier",
-        speciality: "Back-End",
-        imgUrl: "https://github.com/shadcn.png",
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Group 2",
-    totalMembers: 15,
-    members: [
-      {
-        id: 1,
-        name: "John Smith",
-        speciality: "Back-End",
-        imgUrl: "https://github.com/shadcn.png",
-      },
-      {
-        id: 2,
-        name: "Estifanos Tadese",
-        speciality: "UI/UX Designer",
-        imgUrl: "https://github.com/shadcn.png",
-      },
-      {
-        id: 3,
-        name: "Kaleb Yonatan",
-        speciality: "Full-Stack",
-        imgUrl: "https://github.com/shadcn.png",
-      },
-      {
-        id: 4,
-        name: "Abdullah Abdulrehman",
-        speciality: "Front-End",
-        imgUrl: "https://github.com/shadcn.png",
-      },
-    ],
-  },
-];
+interface Group {
+  id: string;
+  name: string;
+  totalMembers: number;
+  members: Member[];
+}
 
 export default function GroupOverview({ linkText = "View All" }: { linkText?: string }) {
-  const [searchQuery] = useState("");
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const searchParams = new URLSearchParams(window.location.search);
+  const sessionId = searchParams.get("id");
 
-  const filteredDivisions = GroupsData.filter((group) =>
-    group.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const token = Cookies.get("accessToken");
+        if (!token) {
+          throw new Error("No authentication token found");
+        }
+        if (!sessionId) {
+          throw new Error("No session ID in URL");
+        }
+
+        // 1. Fetch the session details
+        const sessionResponse = await api.get(`/session/${sessionId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'ngrok-skip-browser-warning': 'true'
+          },
+          withCredentials: false
+        });
+
+        const groupIds = sessionResponse.data.groups;
+        if (!groupIds || groupIds.length === 0) {
+          throw new Error("No groups found in this session");
+        }
+
+        // 2. Fetch all groups
+        const groupsResponse = await api.get("/group/all", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'ngrok-skip-browser-warning': 'true'
+          },
+          withCredentials: false
+        });
+
+        // 3. Filter groups that belong to this session
+        const sessionGroups = groupsResponse.data.filter((group: any) => 
+          groupIds.includes(group._id)
+        );
+
+        // 4. Transform groups to match the expected format
+        const transformedGroups = await Promise.all(
+          sessionGroups.map(async (group: any) => {
+            const memberDetails = await Promise.all(
+              group.members.map(async (memberId: string) => {
+                try {
+                  const memberResponse = await api.get(`/user/${memberId}`, {
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                      'ngrok-skip-browser-warning': 'true'
+                    },
+                    withCredentials: false
+                  });
+                  
+                  const member = memberResponse.data.user;
+                  return {
+                    id: member._id,
+                    name: `${member.personal_info?.first_name || 'Unknown'} ${member.personal_info?.last_name || 'User'}`,
+                    speciality: member.personal_info?.specialization || 'Not specified',
+                    imgUrl: member.personal_info?.profile_picture
+                  };
+                } catch (error) {
+                  console.error(`Failed to fetch member ${memberId}:`, error);
+                  return {
+                    id: memberId,
+                    name: "Unknown Member",
+                    speciality: "Unknown",
+                    imgUrl: undefined
+                  };
+                }
+              })
+            );
+
+            return {
+              id: group._id,
+              name: group.name,
+              totalMembers: group.members.length,
+              members: memberDetails
+            };
+          })
+        );
+
+        setGroups(transformedGroups);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+        setError(error instanceof Error ? error.message : "Failed to load data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [sessionId]);
+
+  if (loading) {
+    return <div className="p-4 text-center">Loading groups...</div>;
+  }
+
+  if (error) {
+    return <div className="p-4 text-center text-red-500">{error}</div>;
+  }
+
+  if (groups.length === 0) {
+    return <div className="p-4 text-center">No groups found for this session</div>;
+  }
 
   return (
     <div>
-      <div className="flex flex-wrap gap-4 w-full">
-        {filteredDivisions.map((group) => (
+      <div className="flex flex-wrap gap-4 w-full h-fit">
+        {groups.map((group) => (
           <GroupCardComponents
             key={group.id}
             division={group}

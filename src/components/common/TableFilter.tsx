@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react"
 import { FiFilter } from "react-icons/fi";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -7,7 +8,7 @@ import { LuSearch } from "react-icons/lu";
 import { AddMemberDialog } from "./AddMemberDialog";
 import { Button } from "../ui/button";
 import { LuImport } from "react-icons/lu";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent } from "react";
 
 interface TableFilterProps {
   onSearch?: (value: string) => void;
@@ -17,6 +18,7 @@ interface TableFilterProps {
   importButton?: boolean;
   addMembersButton?: boolean;
   saveButton?: boolean;
+  onMemberAdded?: () => void;
 }
 
 export function TableFilter({ 
@@ -26,7 +28,8 @@ export function TableFilter({
   importButton = false, 
   addMembersButton = false, 
   saveButton = false,
-  placeholder = "Search"
+  placeholder = "Search",
+  onMemberAdded
 }: TableFilterProps) {
   const [searchValue, setSearchValue] = useState("");
 
@@ -53,7 +56,7 @@ export function TableFilter({
         </div>
       </div>
       <div className="flex gap-3">
-      {saveButton && (
+        {saveButton && (
           <Button
             variant="default"
             className="flex rounded-md bg-[#003087] text-white h-12 w-25 items-center justify-center cursor-pointer hover:bg-[#002f87a2]"
@@ -74,10 +77,8 @@ export function TableFilter({
             </div>
           </Button>
         )}
-        {addMembersButton && (
-        <div>
-          <AddMemberDialog onMemberAdded={() => { console.log("Member added"); }} />
-        </div>
+        {addMembersButton && onMemberAdded && (
+          <AddMemberDialog onMemberAdded={onMemberAdded} />
         )}
         <div
           onClick={onFilter}

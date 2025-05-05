@@ -79,6 +79,14 @@ export function AddMemberDialog({ onMemberAdded }: AddMemberDialogProps) {
     setTimeout(() => setToast({ ...toast, show: false }), 3000);
   };
 
+  const resetForm = () => {
+    setEmail("");
+    setDivision("");
+    setGroup("");
+    setPassword("");
+    setGeneratedPassword("");
+  };
+
   const generateRandomPassword = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
     let result = "";
@@ -115,17 +123,13 @@ export function AddMemberDialog({ onMemberAdded }: AddMemberDialogProps) {
       });
 
       showToast("Member Invited", "Successfully invited the member!", 'success');
-      setTimeout(() => {
-        onMemberAdded(); // Trigger the refresh callback after a delay
-      }, 3000); 
-      
-      // Reset form
-      setEmail("");
-      setDivision("");
-      setGroup("");
-      setPassword("");
-      setGeneratedPassword("");
+
+      resetForm();
       setOpen(false);
+
+      setTimeout(() => {
+        onMemberAdded();
+      }, 3000);
     } catch (error: any) {
       let errorMessage = "Something went wrong. Try again.";
       
@@ -148,11 +152,18 @@ export function AddMemberDialog({ onMemberAdded }: AddMemberDialogProps) {
     }
   };
 
+  const handleDialogClose = (open: boolean) => {
+    if (!open) {
+      resetForm();
+    }
+    setOpen(open);
+  };
+
   const availableGroups: { id: string; name: string }[] = divisionId ? allGroups[divisionId] || [] : [];
 
   return (
     <>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={handleDialogClose}>
         <DialogTrigger asChild>
           <Button
             variant="default"
@@ -245,7 +256,10 @@ export function AddMemberDialog({ onMemberAdded }: AddMemberDialogProps) {
               <Button
                 variant="outline"
                 size="lg"
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  resetForm();
+                  setOpen(false);
+                }}
                 className="flex h-10 w-35 rounded-md items-center justify-center bg-[#34495E0D] cursor-pointer hover:bg-[#48637e0d]"
                 aria-label="Cancel"
                 disabled={isSubmitting}

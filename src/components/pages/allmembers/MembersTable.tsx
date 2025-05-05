@@ -60,9 +60,15 @@ interface MembersTableProps {
   apiMembers: ApiMember[];
   className?: string;
   onDeleteSuccess?: () => void;
+  isLoading?: boolean;
 }
 
-export function MembersTable({ apiMembers, className, onDeleteSuccess }: MembersTableProps) {
+export function MembersTable({ 
+  apiMembers, 
+  className, 
+  onDeleteSuccess,
+  isLoading = false 
+}: MembersTableProps) {
   const router = useRouter();
   const currentUserRole = Cookies.get('role');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -86,7 +92,7 @@ export function MembersTable({ apiMembers, className, onDeleteSuccess }: Members
         });
 
         if (response.data && Array.isArray(response.data.data)) {
-          setDivisions(response.data.data); // Now accessing response.data.data
+          setDivisions(response.data.data);
         }
       } catch (error) {
         console.error("Failed to fetch divisions:", error);
@@ -189,6 +195,14 @@ export function MembersTable({ apiMembers, className, onDeleteSuccess }: Members
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   if (!apiMembers || apiMembers.length === 0) {
     return <div className="p-4 text-gray-500">No members found</div>;
   }
@@ -215,7 +229,7 @@ export function MembersTable({ apiMembers, className, onDeleteSuccess }: Members
               const displayData = getMemberDisplayData(member);
               return (
                 <TableRow
-                  key={displayData.id}
+                  key={member._id}
                   className="cursor-pointer hover:bg-gray-50"
                   onClick={() =>
                     router.push(

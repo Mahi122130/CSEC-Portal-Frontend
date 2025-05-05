@@ -18,7 +18,7 @@ interface NavbarProps {
 
 export default function Navbar({ time }: NavbarProps) {
   const [fname, setFname] = useState("Guest");
-  const [profileName, setProfileName] = useState("");
+  const [memberDisplayName, setMemberDisplayName] = useState<string | null>(null);
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -33,39 +33,41 @@ export default function Navbar({ time }: NavbarProps) {
         console.error("Failed to parse user from localStorage", error);
       }
     }
+  }, []);
 
+  useEffect(() => {
     if (pathname.startsWith("/dashboard/allmembers/profile")) {
       const userId = searchParams.get("id");
       if (userId) {
-        fetchProfileName(userId);
+        const loadUserProfile = async () => {
+          try {
+            const token = Cookies.get("accessToken");
+            if (!token) return;
+
+            const response = await api.get(`user/${userId}`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "ngrok-skip-browser-warning": "true",
+              },
+              withCredentials: false,
+            });
+
+            const userData = response.data?.user;
+            if (userData?.personal_info) {
+              const firstName = userData.personal_info.first_name || "";
+              const lastName = userData.personal_info.last_name || "";
+              const fullName = [firstName, lastName].filter(Boolean).join(" ").trim();
+              if (fullName) setMemberDisplayName(fullName);
+            }
+          } catch (error) {
+            console.log("Failed to fetch user data:", error);
+          }
+        };
+
+        loadUserProfile();
       }
     }
   }, [pathname, searchParams]);
-
-  const fetchProfileName = async (userId: string) => {
-    try {
-      const token = Cookies.get("accessToken");
-      if (!token) return;
-
-      const response = await api.get(`user/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-        withCredentials: false,
-      });
-
-      const userData = response.data?.user;
-      if (userData?.personal_info) {
-        const firstName = userData.personal_info.first_name || "";
-        const lastName = userData.personal_info.last_name || "";
-        const name = [firstName, lastName].filter(Boolean).join(" ").trim();
-        if (name) setProfileName(name);
-      }
-    } catch (error) {
-      console.log("Failed to fetch user data:", error);
-    }
-  };
 
   const getTimeOfDay = () => {
     if (time) return time;
@@ -75,9 +77,13 @@ export default function Navbar({ time }: NavbarProps) {
     return "evening";
   };
 
-  const renderBreadcrumbs = (baseTitle: string, baseSubtitle: string, subPath: string) => {
-    const pathSegments = subPath.split('/').filter(Boolean);
-    
+  const renderBreadcrumbs = (
+    baseTitle: string,
+    baseSubtitle: string,
+    subPath: string
+  ) => {
+    const pathSegments = subPath.split("/").filter(Boolean);
+
     if (pathSegments.length === 0) {
       return (
         <>
@@ -96,7 +102,7 @@ export default function Navbar({ time }: NavbarProps) {
             <div key={index} className="flex items-center gap-2">
               <FaAngleRight color="gray" size={13} className="mt-1" />
               <h3 className="text-sm text-gray-600 capitalize">
-                {segment.replace(/-/g, ' ')}
+                {segment.replace(/-/g, " ")}
               </h3>
             </div>
           ))}
@@ -110,63 +116,63 @@ export default function Navbar({ time }: NavbarProps) {
       const subPath = pathname
         .replace("/dashboard/allmembers", "")
         .replace(/^\//, "");
-      if (subPath === "profile" && profileName) {
+      if (subPath === "profile" && memberDisplayName) {
         return (
           <>
             <h1 className="text-lg font-semibold">All Members</h1>
             <div className="flex gap-2">
               <h3 className="text-sm text-gray-600">All Members Information</h3>
               <FaAngleRight color="gray" size={13} className="mt-1" />
-              <h3 className="text-sm text-gray-600">{profileName}</h3>
+              <h3 className="text-sm text-gray-600">{memberDisplayName}</h3>
             </div>
           </>
         );
       }
-      return renderBreadcrumbs("All Members", "All Members Information", subPath);
-    } 
-    else if (pathname.startsWith("/dashboard/alldivisions")) {
+      return renderBreadcrumbs(
+        "All Members",
+        "All Members Information",
+        subPath
+      );
+    } else if (pathname.startsWith("/dashboard/alldivisions")) {
       const subPath = pathname
         .replace("/dashboard/alldivisions", "")
         .replace(/^\//, "");
-      return renderBreadcrumbs("All Divisions", "All Divisions Information", subPath);
-    } 
-    else if (pathname.startsWith("/dashboard/attendance")) {
+      return renderBreadcrumbs(
+        "All Divisions",
+        "All Divisions Information",
+        subPath
+      );
+    } else if (pathname.startsWith("/dashboard/attendance")) {
       const subPath = pathname
         .replace("/dashboard/attendance", "")
         .replace(/^\//, "");
       return renderBreadcrumbs("Attendance", "All Attendance", subPath);
-    } 
-    else if (pathname.startsWith("/dashboard/session-and-event")) {
+    } else if (pathname.startsWith("/dashboard/session-and-event")) {
       const subPath = pathname
         .replace("/dashboard/session-and-event", "")
         .replace(/^\//, "");
       return renderBreadcrumbs("Sessions & Events", "All Sessions", subPath);
-    } 
-    else if (pathname.startsWith("/dashboard/resources")) {
+    } else if (pathname.startsWith("/dashboard/resources")) {
       const subPath = pathname
         .replace("/dashboard/resources", "")
         .replace(/^\//, "");
       return renderBreadcrumbs("Resources", "All Resources", subPath);
-    } 
-    else if (pathname.startsWith("/dashboard/profile")) {
+    } else if (pathname.startsWith("/dashboard/profile")) {
       const subPath = pathname
         .replace("/dashboard/profile", "")
         .replace(/^\//, "");
       return renderBreadcrumbs("Profile", "Your Profile", subPath);
-    } 
-    else if (pathname.startsWith("/dashboard/administration")) {
+    } else if (pathname.startsWith("/dashboard/administration")) {
       const subPath = pathname
         .replace("/dashboard/administration", "")
         .replace(/^\//, "");
       return renderBreadcrumbs("Administration", "Administration", subPath);
-    } 
-    else if (pathname.startsWith("/dashboard/settings")) {
+    } else if (pathname.startsWith("/dashboard/settings")) {
       const subPath = pathname
         .replace("/dashboard/settings", "")
         .replace(/^\//, "");
       return renderBreadcrumbs("Settings", "All Settings", subPath);
-    } 
-    else {
+    } else {
       return (
         <>
           <div className="flex gap-1">

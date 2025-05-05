@@ -43,11 +43,9 @@ export function TablePagination({
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
-  // Generate page numbers to display
   const getPageNumbers = () => {
     const pages = [];
 
-    // Always show first page
     pages.push(1);
 
     // Calculate range around current page
