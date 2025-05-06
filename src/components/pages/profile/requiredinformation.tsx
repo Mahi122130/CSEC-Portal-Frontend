@@ -4,13 +4,6 @@ import type React from "react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -18,9 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format } from "date-fns";
-import { CalendarIcon, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { X } from "lucide-react";
 
 interface RequiredInformationProps {
   formData: {
@@ -33,7 +26,7 @@ interface RequiredInformationProps {
     graduation_year: string;
     department: string;
     github_handle: string;
-    specialization: string 
+    specialization: string;
     telegram_handle: string;
     role: string;
     profile_picture: File | null;
@@ -53,19 +46,9 @@ export default function RequiredInformation({
   onCancel,
   isUpdating = false,
 }: RequiredInformationProps) {
-  const [date, setDate] = useState<Date | undefined>(
-    formData.birth_date ? new Date(formData.birth_date) : undefined
-  );
   const [photoPreview, setPhotoPreview] = useState<string | null>(
     formData.profile_picture_url || null
   );
-
-  const handleDateChange = (date: Date | undefined) => {
-    setDate(date);
-    if (date) {
-      handleChange("birth_date", format(date, "yyyy-MM-dd"));
-    }
-  };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -162,24 +145,14 @@ export default function RequiredInformation({
             <Label htmlFor="birth_date" className="text-gray-500 text-sm">
               Date of Birth
             </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-left font-normal border border-gray-300 rounded-[8px] h-10"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={handleDateChange}
-                />
-              </PopoverContent>
-            </Popover>
+            <Input
+              id="birth_date"
+              type="date"
+              value={formData.birth_date}
+              onChange={(e) => handleChange("birth_date", e.target.value)}
+              className="border border-gray-300 rounded-[8px] h-10"
+              required
+            />
           </div>
 
           <div className="space-y-1">

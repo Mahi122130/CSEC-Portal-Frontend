@@ -1,3 +1,6 @@
+'use client'
+
+import { useState, useEffect } from "react"
 import { Edit, Trash2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -11,25 +14,76 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { format } from "date-fns"
+import Cookies from "js-cookie"
+import api from "@/lib/axios"
 
-// Sample data
-const sessions = [
-  { id: 1, date: "July 01, 2023", title: "Weekly session", division: "CPD", totalGroups: 6, status: "Started" },
-  { id: 2, date: "July 02, 2023", title: "Contest", division: "CPD", totalGroups: 2, status: "Started" },
-  { id: 3, date: "July 03, 2023", title: "Weekly session", division: "CPD", totalGroups: 3, status: "Started" },
-  { id: 4, date: "July 04, 2023", title: "Weekly session", division: "CPD", totalGroups: 0, status: "Ended" },
-  { id: 5, date: "July 05, 2023", title: "Contest", division: "CPD", totalGroups: 4, status: "Ended" },
-  { id: 6, date: "July 06, 2023", title: "Contest", division: "CPD", totalGroups: 2, status: "Planned" },
-  { id: 7, date: "July 07, 2023", title: "Contest", division: "CPD", totalGroups: 2, status: "Started" },
-  { id: 8, date: "July 08, 2023", title: "Contest", division: "Dev", totalGroups: 2, status: "Ended" },
-  { id: 9, date: "July 09, 2023", title: "Weekly session", division: "Dev", totalGroups: 2, status: "Started" },
-  { id: 10, date: "July 09, 2023", title: "Weekly session", division: "Dev", totalGroups: 2, status: "Started" },
-  { id: 11, date: "July 09, 2023", title: "Weekly session", division: "Dev", totalGroups: 2, status: "Started" },
-  { id: 12, date: "July 09, 2023", title: "Weekly session", division: "Dev", totalGroups: 2, status: "Started" },
-  { id: 13, date: "July 09, 2023", title: "Weekly session", division: "Dev", totalGroups: 2, status: "Started" },
-]
+export default function SessionTable({ sessions }: { sessions: any[] }) {
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [divisions, setDivisions] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-export default function SessionTable() {
+  useEffect(() => {
+    const fetchDivisions = async () => {
+      try {
+        const token = Cookies.get('accessToken')
+        if (!token) {
+          setError('No authentication token found')
+          setLoading(false)
+          return
+        }
+
+        const response = await api.get('/division', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'ngrok-skip-browser-warning': 'true'
+          },
+          withCredentials: false
+        })
+
+        setDivisions(response.data.data)
+        setLoading(false)
+      } catch (err) {
+        console.error('Failed to fetch divisions:', err)
+        setError('Failed to load divisions')
+        setLoading(false)
+      }
+    }
+    fetchDivisions()
+  }, [])
+
+  // Pagination logic
+  const totalPages = Math.ceil(sessions.length / itemsPerPage)
+  const paginatedSessions = sessions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  )
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return format(date, "MMMM dd, yyyy")
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "ended":
+        return "bg-red-50 text-red-500"
+      case "planned":
+        return "bg-yellow-50 text-yellow-500"
+      default:
+        return "bg-green-50 text-green-500"
+    }
+  }
+
+  const getDivisionName = (divisionId: string) => {
+    if (loading) return "Loading..."
+    if (error) return "Error loading"
+    const division = divisions.find(d => d._id === divisionId)
+    return division ? division.name : divisionId
+  }
+
   return (
     <div className="border rounded-md">
       <Table>
@@ -44,21 +98,15 @@ export default function SessionTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sessions.map((session) => (
-            <TableRow key={session.id}>
-              <TableCell className="font-medium">{session.date}</TableCell>
+          {paginatedSessions.map((session) => (
+            <TableRow key={session._id}>
+              <TableCell className="font-medium">{formatDate(session.date)}</TableCell>
               <TableCell>{session.title}</TableCell>
-              <TableCell>{session.division}</TableCell>
-              <TableCell>{session.totalGroups}</TableCell>
+              <TableCell>{getDivisionName(session.division)}</TableCell>
+              <TableCell>{session.groups.length}</TableCell>
               <TableCell>
                 <Badge
-                  className={`${
-                    session.status === "Started"
-                      ? "bg-green-50 text-green-500"
-                      : session.status === "Ended"
-                        ? "bg-red-50 text-red-500"
-                        : "bg-yellow-50 text-yellow-500"
-                  } hover:bg-opacity-80`}
+                  className={`${getStatusBadge(session.status)} hover:bg-opacity-80 capitalize`}
                 >
                   {session.status}
                 </Badge>
@@ -80,7 +128,13 @@ export default function SessionTable() {
       <div className="flex items-center justify-between px-4 py-2 border-t">
         <div className="flex items-center space-x-2">
           <span className="text-sm text-gray-500">Showing</span>
-          <Select defaultValue="10">
+          <Select 
+            value={itemsPerPage.toString()}
+            onValueChange={(value) => {
+              setItemsPerPage(Number(value))
+              setCurrentPage(1)
+            }}
+          >
             <SelectTrigger className="w-16 h-8">
               <SelectValue />
             </SelectTrigger>
@@ -90,29 +144,44 @@ export default function SessionTable() {
               <SelectItem value="50">50</SelectItem>
             </SelectContent>
           </Select>
-          <span className="text-sm text-gray-500">Showing 1 to 10 out of 50 records</span>
+          <span className="text-sm text-gray-500">
+            Showing {paginatedSessions.length} of {sessions.length} records
+          </span>
         </div>
         <Pagination>
           <PaginationContent>
             <PaginationItem>
-              <PaginationPrevious href="#" />
+              <PaginationPrevious 
+                href="#" 
+                onClick={(e) => {
+                  e.preventDefault()
+                  if (currentPage > 1) setCurrentPage(currentPage - 1)
+                }}
+              />
             </PaginationItem>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <PaginationItem key={page}>
+                <PaginationLink 
+                  href="#" 
+                  isActive={currentPage === page}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setCurrentPage(page)
+                  }}
+                  className="rounded-[8px]"
+                >
+                  {page}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
             <PaginationItem>
-              <PaginationLink href="#" isActive>
-                1
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">2</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">3</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">4</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext href="#" />
+              <PaginationNext 
+                href="#" 
+                onClick={(e) => {
+                  e.preventDefault()
+                  if (currentPage < totalPages) setCurrentPage(currentPage + 1)
+                }}
+              />
             </PaginationItem>
           </PaginationContent>
         </Pagination>

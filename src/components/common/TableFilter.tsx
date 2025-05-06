@@ -64,7 +64,7 @@ export function TableFilter({
       <div className="flex gap-3">
         {saveButton && (
           <Button
-            variant="default"
+            variant="none"
             className="flex rounded-md bg-[#003087] text-white h-12 w-25 items-center justify-center cursor-pointer hover:bg-[#002f87a2]"
             onClick={onSave}
             disabled={saveButtonDisabled}

@@ -3,12 +3,9 @@
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Calendar } from "../../ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "../../ui/text-area"
-import { format } from "date-fns"
-import { CalendarIcon, FileIcon, UploadIcon, X } from "lucide-react"
+import { FileIcon, UploadIcon, X } from "lucide-react"
 
 interface OptionalInformationProps {
   formData: {
@@ -28,29 +25,7 @@ interface OptionalInformationProps {
 }
 
 export default function OptionalInformation({ formData, handleChange, onCancel }: OptionalInformationProps) {
-  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(
-    formData.optional_birth_date ? new Date(formData.optional_birth_date) : undefined,
-  )
-
-  const [joiningDate, setJoiningDate] = useState<Date | undefined>(
-    formData.joining_date ? new Date(formData.joining_date) : undefined,
-  )
-
   const [dragActive, setDragActive] = useState(false)
-
-  const handleDateOfBirthChange = (date: Date | undefined) => {
-    setDateOfBirth(date)
-    if (date) {
-      handleChange("optional_birth_date", format(date, "yyyy-MM-dd"))
-    }
-  }
-
-  const handleJoiningDateChange = (date: Date | undefined) => {
-    setJoiningDate(date)
-    if (date) {
-      handleChange("joining_date", format(date, "yyyy-MM-dd"))
-    }
-  }
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -148,17 +123,13 @@ export default function OptionalInformation({ formData, handleChange, onCancel }
 
           <div className="space-y-1">
             <Label htmlFor="optional_birth_date" className="text-gray-500 text-sm">Date of Birth</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button id="optional_birth_date" variant="outline" className="w-full justify-start text-left font-normal border border-gray-300 rounded-[8px] h-10">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateOfBirth ? format(dateOfBirth, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar mode="single" selected={dateOfBirth} onSelect={handleDateOfBirthChange} initialFocus />
-              </PopoverContent>
-            </Popover>
+            <Input
+              id="optional_birth_date"
+              type="date"
+              value={formData.optional_birth_date}
+              onChange={(e) => handleChange("optional_birth_date", e.target.value)}
+              className="border border-gray-300 rounded-[8px] h-10"
+            />
           </div>
 
           <div className="space-y-1">
@@ -225,17 +196,13 @@ export default function OptionalInformation({ formData, handleChange, onCancel }
 
           <div className="space-y-1">
             <Label htmlFor="joining_date" className="text-gray-500 text-sm">Joining Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button id="joining_date" variant="outline" className="w-full justify-start text-left font-normal border border-gray-300 rounded-[8px] h-10">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {joiningDate ? format(joiningDate, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar mode="single" selected={joiningDate} onSelect={handleJoiningDateChange} initialFocus />
-              </PopoverContent>
-            </Popover>
+            <Input
+              id="joining_date"
+              type="date"
+              value={formData.joining_date}
+              onChange={(e) => handleChange("joining_date", e.target.value)}
+              className="border border-gray-300 rounded-[8px] h-10"
+            />
           </div>
 
           <div className="space-y-1">

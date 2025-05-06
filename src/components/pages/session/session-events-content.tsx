@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { List, Table2 } from "lucide-react"
 import { MdAddCircleOutline } from "react-icons/md";
 import { Button } from "@/components/ui/button"
@@ -11,11 +11,42 @@ import SessionList from "@/components/pages/session/session-list"
 import SessionTable from "@/components/pages/session/sessiontable"
 import AddEventForm from "@/components/pages/session/add-event-dialog"
 import AddSessionForm from "@/components/pages/session/add-session-dialog"
+import api from "@/lib/axios"
+import Cookies from "js-cookie"
 
 export default function SessionAndEvent() {
   const [view, setView] = useState<"list" | "table">("list")
   const [type, setType] = useState<"event" | "session">("event")
   const [showAddForm, setShowAddForm] = useState(false)
+  const [sessions, setSessions] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchSessions = async () => {
+      try {
+        const token = Cookies.get('accessToken')
+        if (!token) return
+
+        const response = await api.get('/session', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'ngrok-skip-browser-warning': 'true'
+          },
+          withCredentials: false
+        })
+
+        if (response.data) {
+          setSessions(response.data)
+        }
+      } catch (err) {
+        console.error("Failed to fetch sessions:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchSessions()
+  }, [])
 
   return (
     <div className="container mx-auto max-w-full p-4">
@@ -60,7 +91,6 @@ export default function SessionAndEvent() {
           </Select>
         </div>
       </div>
-
       {showAddForm ? (
         type === "event" ? (
           <AddEventForm onCancel={() => setShowAddForm(false)} />
@@ -76,9 +106,9 @@ export default function SessionAndEvent() {
               <EventTable />
             )
           ) : view === "list" ? (
-            <SessionList />
+            <SessionList sessions={sessions} />
           ) : (
-            <SessionTable />
+            <SessionTable sessions={sessions} />
           )}
         </>
       )}

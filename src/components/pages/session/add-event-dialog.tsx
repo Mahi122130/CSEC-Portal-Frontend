@@ -173,7 +173,7 @@ export default function AddEventForm({ onCancel }: AddEventFormProps) {
       </div>
 
       <div className="flex justify-between mt-8">
-        <Button variant="outline" onClick={onCancel} className="h-10 rounded-[8px] p-2 cursor-pointer">
+        <Button variant="outline" onClick={onCancel} className="h-10 border-1 border-gray-300 rounded-[8px] p-2 cursor-pointer">
           Cancel
         </Button>
         <Button className="bg-[#003081] h-10 rounded-[8px] p-2 text-white hover:bg-[#00206077] cursor-pointer">Create</Button>
