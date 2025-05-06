@@ -26,7 +26,7 @@ export default function AddSessionForm({ onCancel }: AddSessionFormProps) {
         <div className="space-y-4">
           <div>
             <Label htmlFor="session-title">Session Title</Label>
-            <Input id="session-title" placeholder="Enter session title" className="w-50 justify-start text-left font-normal p-2 border-1 border-gray-200 rounded-[10px]" />
+            <Input id="session-title" placeholder="Enter session title" className="w-fit justify-start text-left font-normal p-2 border-1 border-gray-200 rounded-[10px]" />
           </div>
 
           <div>
@@ -43,17 +43,17 @@ export default function AddSessionForm({ onCancel }: AddSessionFormProps) {
             </Select>
           </div>
 
-          <div>
-            <Label htmlFor="select-day">Select Day</Label>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="select-date">Select Date</Label>
             <Popover open={showCalendar} onOpenChange={setShowCalendar}>
               <PopoverTrigger asChild>
                 <Button
                   variant="none"
-                  className="w-50 justify-start text-left font-normal p-2 border-1 border-gray-200 rounded-[10px]"
+                  className="w-fit justify-start text-left font-normal p-2 border-1 border-gray-200 rounded-[10px]"
                   onClick={() => setShowCalendar(true)}
                 >
                   <Calendar className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : "Select day"}
+                  {date ? format(date, "PPP") : "Select date"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">

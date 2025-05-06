@@ -12,7 +12,7 @@ import SessionTable from "@/components/pages/session/sessiontable"
 import AddEventForm from "@/components/pages/session/add-event-dialog"
 import AddSessionForm from "@/components/pages/session/add-session-dialog"
 
-export default function Dashboard() {
+export default function SessionAndEvent() {
   const [view, setView] = useState<"list" | "table">("list")
   const [type, setType] = useState<"event" | "session">("event")
   const [showAddForm, setShowAddForm] = useState(false)

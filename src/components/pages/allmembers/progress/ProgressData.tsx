@@ -85,7 +85,7 @@ export default function AttendanceProgress({ id }: AttendanceProgressProps) {
 
         // Calculate overall progress percentage
         const totalSessions = attendanceData.total;
-        const attendedSessions = counts.Present + (counts.Headsup * 0.5); // Count heads-up as half attendance
+        const attendedSessions = counts.Present + (counts.Headsup * 0.5);
         const progress = totalSessions > 0 
           ? Math.round((attendedSessions / (totalSessions + counts.Headsup)) * 100) 
           : 0;

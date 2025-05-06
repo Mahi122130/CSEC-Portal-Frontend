@@ -149,7 +149,7 @@ export function ProfileHeader() {
                   className="flex items-center justify-center h-23 w-23 rounded-full object-cover"
                 />
               ) : (
-                <div className="flex items-center justify-center h-full w-full rounded-full bg-[#001C5D] text-white text-2xl font-bold">
+                <div className="flex items-center justify-center h-full w-full rounded-full text-2xl font-bold">
                   {getInitials()}
                 </div>
               )}

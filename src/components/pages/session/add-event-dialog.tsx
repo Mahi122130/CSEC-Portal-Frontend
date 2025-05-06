@@ -42,7 +42,7 @@ export default function AddEventForm({ onCancel }: AddEventFormProps) {
         <div className="space-y-4">
           <div>
             <Label htmlFor="event-title">Event Title</Label>
-            <Input id="event-title" placeholder="Enter event title" className="w-50 justify-start text-left font-normal p-2 border-1 border-gray-200 rounded-[10px]"/>
+            <Input id="event-title" placeholder="Enter event title" className="w-fit justify-start text-left font-normal p-2 border-1 border-gray-200 rounded-[10px]"/>
           </div>
 
           {visibility === "members" && (
@@ -98,7 +98,7 @@ export default function AddEventForm({ onCancel }: AddEventFormProps) {
               <PopoverTrigger asChild>
                 <Button
                   variant="none"
-                  className="w-50 justify-start text-left font-normal p-2 border-1 border-gray-200 rounded-[10px]"
+                  className="w-fit justify-start text-left font-normal p-2 border-1 border-gray-200 rounded-[10px]"
                   onClick={() => setShowCalendar(true)}
                 >
                   <Calendar className="mr-2 h-4 w-4" />
