@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { List, Table2, Plus } from "lucide-react"
+import { List, Table2 } from "lucide-react"
+import { MdAddCircleOutline } from "react-icons/md";
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import EventList from "@/components/pages/session/eventlist"
@@ -21,25 +22,25 @@ export default function Dashboard() {
       <div className="flex justify-between items-center mb-4">
         <div className="flex space-x-2">
           <Button
-            variant={view === "list" ? "default" : "outline"}
-            className={view === "list" ? "bg-[#003081]" : ""}
+            variant={view === "list" ? "none" : "none"}
+            className={`h-10 px-4 rounded-[8px] ${view === "list" ? "bg-[#003081] text-white" : "cursor-pointer"}`}
             onClick={() => setView("list")}
           >
-            <List className="h-12 w-10  rounded-[8px]" />
+            <List className="h-4 w-4 mr-2" />
             List
           </Button>
           <Button
-            variant={view === "table" ? "default" : "outline"}
-            className={view === "table" ? "bg-[#003081]" : ""}
+            variant={view === "table" ? "none" : "none"}
+            className={`h-10 px-4 rounded-[8px] ${view === "table" ? "bg-[#003081] text-white" : "cursor-pointer"}`}
             onClick={() => setView("table")}
           >
-            <Table2 className="h-12 w-15 rounded-[8px]" />
+            <Table2 className="h-4 w-4 mr-2" />
             Table
           </Button>
         </div>
-        <div className="flex space-x-2">
-          <Button className="bg-[#003081] text-white rounded-[8px] hover:bg-[#002060]" onClick={() => setShowAddForm(true)}>
-            <Plus className="h-4 w-4 mr-2" />
+        <div className="flex justify-center space-x-2">
+          <Button className="bg-[#003081] text-white rounded-[8px] hover:bg-[#002f8775] cursor-pointer h-10 px-2" onClick={() => setShowAddForm(true)}>
+            <MdAddCircleOutline className="h-4 w-4" />
             Create {type === "event" ? "Event" : "Session"}
           </Button>
           <Select
@@ -49,7 +50,7 @@ export default function Dashboard() {
               setShowAddForm(false)
             }}
           >
-            <SelectTrigger className="w-[130px]">
+            <SelectTrigger className="w-[130px] h-10">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

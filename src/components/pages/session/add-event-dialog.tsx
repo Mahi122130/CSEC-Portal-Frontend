@@ -42,7 +42,7 @@ export default function AddEventForm({ onCancel }: AddEventFormProps) {
         <div className="space-y-4">
           <div>
             <Label htmlFor="event-title">Event Title</Label>
-            <Input id="event-title" placeholder="Enter event title" />
+            <Input id="event-title" placeholder="Enter event title" className="w-50 justify-start text-left font-normal p-2 border-1 border-gray-200 rounded-[10px]"/>
           </div>
 
           {visibility === "members" && (
@@ -92,13 +92,13 @@ export default function AddEventForm({ onCancel }: AddEventFormProps) {
             </>
           )}
 
-          <div>
+          <div className="flex flex-col gap-2">
             <Label htmlFor="select-date">Select Date</Label>
             <Popover open={showCalendar} onOpenChange={setShowCalendar}>
               <PopoverTrigger asChild>
                 <Button
-                  variant="outline"
-                  className="w-full justify-start text-left font-normal"
+                  variant="none"
+                  className="w-50 justify-start text-left font-normal p-2 border-1 border-gray-200 rounded-[10px]"
                   onClick={() => setShowCalendar(true)}
                 >
                   <Calendar className="mr-2 h-4 w-4" />
@@ -173,10 +173,10 @@ export default function AddEventForm({ onCancel }: AddEventFormProps) {
       </div>
 
       <div className="flex justify-between mt-8">
-        <Button variant="outline" onClick={onCancel} className="rounded-[8px] h-12 ">
+        <Button variant="outline" onClick={onCancel} className="h-10 rounded-[8px] p-2 cursor-pointer">
           Cancel
         </Button>
-        <Button className="bg-[#003081]  h-12 rounded:[8px] text-white hover:bg-[#002060]">Create</Button>
+        <Button className="bg-[#003081] h-10 rounded-[8px] p-2 text-white hover:bg-[#00206077] cursor-pointer">Create</Button>
       </div>
     </div>
   )

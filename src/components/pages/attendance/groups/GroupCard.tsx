@@ -42,15 +42,13 @@ export default function GroupCard({ division, linkText = "View All" }: GroupCard
   };
 
   return (
-    <Card className="border-1 border-gray-300 rounded-[8px] p-3 dark:bg-gray-800 dark:border-gray-700 w-[49%] mb-1 h-fit">
+    <Card className="border-1 border-gray-300 rounded-[8px] p-3 dark:bg-gray-800 dark:border-gray-700 w-[49%] mb-1">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-xl font-medium">{division.name}</CardTitle>
-        <Link href={{
-          pathname: "/dashboard/attendance/group/members",
-          query: { 
-            groupId: division.id
-          }
-        }}>
+        <Link 
+          href={`/dashboard/attendance/group/members?groupId=${division.id}&sessionId=${sessionId}`}
+          passHref
+        >
           <Button
             variant="link"
             className="text-sm font-medium text-[#003087] cursor-pointer"
@@ -76,6 +74,11 @@ export default function GroupCard({ division, linkText = "View All" }: GroupCard
                   variant="ghost"
                   className="flex w-full justify-between p-2 font-normal"
                 >
+                  <Link 
+                    href={`/dashboard/allmembers/profile?id=${member.id}`}
+                    passHref
+                    className="flex justify-between w-full items-center"
+                  >
                   <div className="flex flex-col items-start">
                     <div className="flex items-center gap-2">
                       <Avatar className="flex items-center">
@@ -92,13 +95,7 @@ export default function GroupCard({ division, linkText = "View All" }: GroupCard
                       </div>
                     </div>
                   </div>
-                  <Link href={{
-                    pathname: "/dashboard/allmembers/profile",
-                    query: {
-                      id: member.id
-                    }
-                  }}>
-                    <ChevronRight className="h-4 w-4 cursor-pointer" />
+                  <ChevronRight className="h-4 w-4 cursor-pointer" />
                   </Link>
                 </Button>
               </CollapsibleTrigger>

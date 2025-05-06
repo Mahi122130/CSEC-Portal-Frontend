@@ -1,127 +1,149 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { HeadsupDialog } from "./HeadsupDialog";
+import { useSearchParams } from "next/navigation";
+import api from "@/lib/axios";
+import Cookies from "js-cookie";
 
-// Sample data for the attendance list
-const attendanceData = [
-  {
-    id: 1,
-    name: "Debbie Robertson",
-    avatar: "http://github.com/shadcn",
-  },
-  { id: 2, name: "Floyd Files", avatar: "https://github.com/shadcn.png" },
-  { id: 3, name: "Cody Fisher", avatar: "https://github.com/shadcn.png" },
-  {
-    id: 4,
-    name: "Dianne Russell",
-    avatar: "https://github.com/shadcn.png",
-  },
-  {
-    id: 5,
-    name: "Savannah Nguyen",
-    avatar: "https://github.com/shadcn.png",
-  },
-  { id: 6, name: "Jacob Jones", avatar: "https://github.com/shadcn.png" },
-  {
-    id: 7,
-    name: "Marvin McKinney",
-    avatar: "https://github.com/shadcn.png",
-  },
-  {
-    id: 8,
-    name: "Brooklyn Simmons",
-    avatar: "https://github.com/shadcn.png",
-  },
-  {
-    id: 9,
-    name: "Kristin Watson",
-    avatar: "https://github.com/shadcn.png",
-  },
-  {
-    id: 10,
-    name: "Kristin Watson",
-    avatar: "https://github.com/shadcn.png",
-  },
-  {
-    id: 11,
-    name: "Kathryn Murphy",
-    avatar: "https://github.com/shadcn.png",
-  },
-  {
-    id: 12,
-    name: "Arlene McCoy",
-    avatar: "https://github.com/shadcn.png",
-  },
-  {
-    id: 13,
-    name: "Arlene McCoy",
-    avatar: "https://github.com/shadcn.png",
-  },
-];
-
-export default function AttendanceTable() {
-  const [attendanceStatus, setAttendanceStatus] = useState<
-    Record<number, "present" | "absent" | null>
-  >({});
-
-  const handleAttendanceChange = (id: number, status: "present" | "absent") => {
-    setAttendanceStatus((prev) => {
-      // If clicking the same status again, toggle it off (set to null)
-      if (prev[id] === status) {
-        const newStatus = { ...prev };
-        delete newStatus[id];
-        return newStatus;
-      }
-      return {
-        ...prev,
-        [id]: status,
-      };
-    });
+interface Member {
+  _id: string;
+  personal_info?: {
+    first_name?: string;
+    last_name?: string;
+    profile_picture?: string;
   };
+  email: string;
+}
+
+interface AttendanceTableProps {
+  onAttendanceChange?: (id: string, status: "present" | "absent" | null) => void;
+  pendingAttendance?: Record<string, "present" | "absent">;
+}
+
+export default function AttendanceTable({ 
+  onAttendanceChange,
+  pendingAttendance = {}
+}: AttendanceTableProps) {
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const groupId = searchParams.get("groupId");
+  const sessionId = searchParams.get("sessionId");
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const token = Cookies.get("accessToken");
+        if (!token) {
+          throw new Error("No authentication token found");
+        }
+        if (!groupId) {
+          throw new Error("No group ID in URL");
+        }
+
+        const response = await api.get(`/group/group/${groupId}/members`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+          withCredentials: false,
+        });
+
+        setMembers(response.data);
+      } catch (err) {
+        console.error("Failed to fetch members:", err);
+        setError(err instanceof Error ? err.message : "Failed to load members");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMembers();
+  }, [groupId]);
+
+  const handleAttendanceChange = (id: string, status: "present" | "absent") => {
+    if (onAttendanceChange) {
+      if (pendingAttendance[id] === status) {
+        onAttendanceChange(id, null);
+      } else {
+        onAttendanceChange(id, status);
+      }
+    }
+  };
+
+  const getMemberDisplayInfo = (member: Member) => {
+    const firstName = member.personal_info?.first_name || "";
+    const lastName = member.personal_info?.last_name || "";
+    const profilePicture = member.personal_info?.profile_picture;
+    const fullName = `${firstName} ${lastName}`.trim() || member.email.split("@")[0];
+    const initials = (firstName?.charAt(0) || "") + (lastName?.charAt(0) || "") || "?";
+
+    return { fullName, profilePicture, initials };
+  };
+
+  if (loading) {
+    return <div className="py-4 text-center">Loading members...</div>;
+  }
+
+  if (error) {
+    return <div className="py-4 text-center text-red-500">{error}</div>;
+  }
+
+  if (members.length === 0) {
+    return <div className="py-4 text-center">No members found in this group</div>;
+  }
 
   return (
     <div className="divide-y">
-      {attendanceData.map((member) => (
-        <div key={member.id} className="grid grid-cols-3 gap-4 py-4 text-sm">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8">
-              <AvatarImage
-                src={member.avatar || "/placeholder.svg"}
-                alt={member.name}
-              />
-              <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <span>{member.name}</span>
+      {members.map((member) => {
+        const { fullName, profilePicture, initials } = getMemberDisplayInfo(member);
+
+        return (
+          <div key={member._id} className="grid grid-cols-3 gap-4 py-4 text-sm">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-8 w-8">
+                <AvatarImage
+                  src={profilePicture || "/placeholder.svg"}
+                  alt={fullName}
+                />
+                <AvatarFallback>{initials}</AvatarFallback>
+              </Avatar>
+              <span>{fullName}</span>
+            </div>
+            <div className="flex items-center justify-end gap-4">
+              <button
+                className={
+                  pendingAttendance[member._id] === "present"
+                    ? "bg-green-500 text-white px-3 py-[2px] rounded-2xl"
+                    : "border-1 border-gray-300 px-3 py-[2px] rounded-2xl"
+                }
+                onClick={() => handleAttendanceChange(member._id, "present")}
+              >
+                Present
+              </button>
+              <button
+                className={
+                  pendingAttendance[member._id] === "absent"
+                    ? "bg-red-500 text-white px-3 py-[2px] rounded-2xl"
+                    : "border-1 border-gray-300 px-3 py-[2px] rounded-2xl"
+                }
+                onClick={() => handleAttendanceChange(member._id, "absent")}
+              >
+                Absent
+              </button>
+            </div>
+            <div className="flex justify-end pr-10">
+              <HeadsupDialog memberId={member._id} sessionId={sessionId || undefined} />
+            </div>
           </div>
-          <div className="flex items-center justify-end gap-4">
-          <button
-              className={
-                attendanceStatus[member.id] === "present"
-                  ? "bg-green-500 text-white px-3 py-[2px] rounded-2xl"
-                  : "border-1 border-gray-300 px-3 py-[2px] rounded-2xl"
-              }
-              onClick={() => handleAttendanceChange(member.id, "present")}
-            >
-              Present
-            </button>
-            <button
-              className={
-                attendanceStatus[member.id] === "absent"
-                  ? "bg-red-500 text-white px-3 py-[2px] rounded-2xl"
-                  : "border-1 border-gray-300 px-3 py-[2px] rounded-2xl"
-              }
-              onClick={() => handleAttendanceChange(member.id, "absent")}
-            >
-              Absent
-            </button>
-          </div>
-          <div className="flex justify-end pr-10">
-            <HeadsupDialog />
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

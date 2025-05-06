@@ -62,21 +62,26 @@ export function ProfileHeader() {
           const now = new Date();
           const lastSeenDate = new Date(lastSeenResponse.data.lastSeen);
           const diffInSeconds = Math.floor((now.getTime() - lastSeenDate.getTime()) / 1000);
-          setLastSeen(diffInSeconds < 120 ? "online" : formatDate(lastSeenDate));
+          
+          if (diffInSeconds < 120) {
+            setLastSeen("online");
+          } else if (diffInSeconds < 3600) {
+            const minutes = Math.floor(diffInSeconds / 60);
+            setLastSeen(`${minutes}min ago`);
+          } else if (now.toDateString() === lastSeenDate.toDateString()) {
+            setLastSeen(`at ${lastSeenDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`);
+          } else {
+            setLastSeen(lastSeenDate.toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+            }));
+          }
         }
       } catch (error) {
         console.error("Failed to fetch member data:", error);
       } finally {
         setLoading(false);
       }
-    };
-
-    const formatDate = (date: Date): string => {
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-      });
     };
 
     fetchMemberData();
@@ -94,6 +99,30 @@ export function ProfileHeader() {
     ? `${member.personal_info.first_name || ""} ${member.personal_info.last_name || ""}`.trim()
     : member.email.split("@")[0];
 
+  const getInitials = () => {
+    const firstName = member.personal_info?.first_name || '';
+    const lastName = member.personal_info?.last_name || '';
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  };
+
+  const getBackgroundStyle = () => {
+    if (member.personal_info?.profile_picture) {
+      return {
+        backgroundImage: `url('${member.personal_info.profile_picture}')`
+      };
+    } else {
+      return {
+        backgroundColor: '#001C5D',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'white',
+        fontSize: '48px',
+        fontWeight: 'bold'
+      };
+    }
+  };
+
   return (
     <div className="flex justify-center relative h-54 rounded-[8px] w-full">
       <div
@@ -102,20 +131,28 @@ export function ProfileHeader() {
       >
         <div 
           className="absolute inset-0 bg-cover bg-center blur-lg opacity-50" 
-          style={{ 
-            backgroundImage: `url('${member.personal_info?.profile_picture || "https://github.com/shadcn.png"}')` 
-          }} 
-        />
+          style={getBackgroundStyle()}
+        >
+          {!member.personal_info?.profile_picture && (
+            <span>{getInitials()}</span>
+          )}
+        </div>
         <div className="relative z-10 h-full">
           <div className="absolute bottom-6 left-13 transform translate-y-1/2 flex items-end gap-4">
-            <div className="flex items-center justify-center h-23 w-23 rounded-full">
-              <Image
-                src={member.personal_info?.profile_picture || "https://github.com/shadcn.png"}
-                alt={fullName}
-                width={92}
-                height={92}
-                className="flex items-center justify-center h-23 w-23 rounded-full object-cover"
-              />
+            <div className="flex items-center justify-center h-23 w-23 rounded-full bg-gray-200">
+              {member.personal_info?.profile_picture ? (
+                <Image
+                  src={member.personal_info.profile_picture}
+                  alt={fullName}
+                  width={92}
+                  height={92}
+                  className="flex items-center justify-center h-23 w-23 rounded-full object-cover"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full w-full rounded-full bg-[#001C5D] text-white text-2xl font-bold">
+                  {getInitials()}
+                </div>
+              )}
             </div>
             <div className="flex gap-5 text-white" style={{ marginBottom: "22px" }}>
               <div>
@@ -123,7 +160,7 @@ export function ProfileHeader() {
                 <p className="text-[16px] opacity-90 capitalize">{member.personal_info?.specialization}</p>
               </div>
               {lastSeen === "online" ? (
-                <p className="flex items-end text-sm  text-green-400 font-medium">online</p>
+                <p className="flex items-end text-sm text-green-400 font-medium">online</p>
               ) : (
                 <p className="flex items-end text-sm opacity-90">last seen {lastSeen || "recently"}</p>
               )}

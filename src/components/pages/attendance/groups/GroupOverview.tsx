@@ -24,8 +24,8 @@ export default function GroupOverview({ linkText = "View All" }: { linkText?: st
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const searchParams = new URLSearchParams(window.location.search);
-  const sessionId = searchParams.get("id");
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get("sessionId");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -137,7 +137,7 @@ export default function GroupOverview({ linkText = "View All" }: { linkText?: st
 
   return (
     <div>
-      <div className="flex flex-wrap gap-4 w-full h-fit">
+      <div className="flex flex-wrap gap-4 w-full">
         {groups.map((group) => (
           <GroupCardComponents
             key={group.id}

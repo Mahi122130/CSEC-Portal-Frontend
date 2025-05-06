@@ -13,21 +13,27 @@ import { ChangeEvent } from "react";
 interface TableFilterProps {
   onSearch?: (value: string) => void;
   onFilter?: () => void;
+  onSave?: () => void;
   placeholder?: string;
   className?: string;
   importButton?: boolean;
   addMembersButton?: boolean;
   saveButton?: boolean;
+  saveButtonDisabled?: boolean;
+  saveButtonText?: string;
   onMemberAdded?: () => void;
 }
 
 export function TableFilter({ 
   onSearch, 
   onFilter, 
+  onSave,
   className, 
   importButton = false, 
   addMembersButton = false, 
   saveButton = false,
+  saveButtonDisabled = false,
+  saveButtonText = "Save",
   placeholder = "Search",
   onMemberAdded
 }: TableFilterProps) {
@@ -60,9 +66,11 @@ export function TableFilter({
           <Button
             variant="default"
             className="flex rounded-md bg-[#003087] text-white h-12 w-25 items-center justify-center cursor-pointer hover:bg-[#002f87a2]"
+            onClick={onSave}
+            disabled={saveButtonDisabled}
           >
             <div className="flex gap-1 items-center justify-center">
-              <div className="text-lg">Save</div>
+              <div className="text-lg">{saveButtonText}</div>
             </div>
           </Button>
         )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { MdAddCircleOutline } from "react-icons/md";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,39 +21,26 @@ import { Input } from "@/components/ui/input";
 import api from "@/lib/axios";
 import Cookies from "js-cookie";
 
-const divisions = [
-  { id: "680a9a2b9e86262d7c618bd1", name: "Competitive Programming" },
-  { id: "680a9a2c9e86262d7c618bd4", name: "Development" },
-  { id: "680a9a2d9e86262d7c618bd7", name: "Data Science" },
-  { id: "680a9a2e9e86262d7c618bda", name: "Cyber Security" },
-];
+interface Division {
+  _id: string;
+  name: string;
+  members: any[];
+  coordinators: any[];
+  year_of_establishment: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
 
-const allGroups: Record<string, { id: string; name: string }[]> = {
-  "680a9a2b9e86262d7c618bd1": [
-    { id: "680a9a2f9e86262d7c618bde", name: "Group 1" },
-    { id: "680a9a2f9e86262d7c618be1", name: "Group 2" },
-    { id: "680a9a309e86262d7c618be4", name: "Group 3" },
-    { id: "680a9a309e86262d7c618be7", name: "Group 4" },
-  ],
-  "680a9a2c9e86262d7c618bd4": [
-    { id: "680a9a319e86262d7c618beb", name: "Group 1" },
-    { id: "680a9a329e86262d7c618bee", name: "Group 2" },
-    { id: "680a9a339e86262d7c618bf1", name: "Group 3" },
-    { id: "680a9a339e86262d7c618bf4", name: "Group 4" },
-  ],
-  "680a9a2d9e86262d7c618bd7": [
-    { id: "680a9a359e86262d7c618bf8", name: "Group 1" },
-    { id: "680a9a369e86262d7c618bfb", name: "Group 2" },
-    { id: "680a9a369e86262d7c618bfe", name: "Group 3" },
-    { id: "680a9a379e86262d7c618c01", name: "Group 4" },
-  ],
-  "680a9a2e9e86262d7c618bda": [
-    { id: "680a9a379e86262d7c618c05", name: "Group 1" },
-    { id: "680a9a389e86262d7c618c08", name: "Group 2" },
-    { id: "680a9a399e86262d7c618c0b", name: "Group 3" },
-    { id: "680a9a3a9e86262d7c618c0e", name: "Group 4" },
-  ],
-};
+interface Group {
+  _id: string;
+  name: string;
+  division: string;
+  members: string[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
 
 interface AddMemberDialogProps {
   onMemberAdded: () => void;
@@ -67,12 +54,81 @@ export function AddMemberDialog({ onMemberAdded }: AddMemberDialogProps) {
   const [password, setPassword] = useState("");
   const [generatedPassword, setGeneratedPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [divisions, setDivisions] = useState<Division[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [isLoadingDivisions, setIsLoadingDivisions] = useState(false);
+  const [isLoadingGroups, setIsLoadingGroups] = useState(false);
   const [toast, setToast] = useState<{
     show: boolean;
     title: string;
     message: string;
     type: 'success' | 'error';
   }>({ show: false, title: '', message: '', type: 'success' });
+
+  useEffect(() => {
+    if (open) {
+      fetchDivisions();
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (divisionId) {
+      fetchGroups(divisionId);
+    } else {
+      setGroups([]);
+      setGroup("");
+    }
+  }, [divisionId]);
+
+  const fetchDivisions = async () => {
+    setIsLoadingDivisions(true);
+    try {
+      const token = Cookies.get('accessToken');
+      if (!token) return;
+
+      const response = await api.get('/division', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+        withCredentials: false,
+      });
+
+      if (response.data && Array.isArray(response.data.data)) {
+        setDivisions(response.data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch divisions:", error);
+      showToast("Error", "Failed to load divisions", 'error');
+    } finally {
+      setIsLoadingDivisions(false);
+    }
+  };
+
+  const fetchGroups = async (divisionId: string) => {
+    setIsLoadingGroups(true);
+    try {
+      const token = Cookies.get('accessToken');
+      if (!token) return;
+
+      const response = await api.get(`/group/${divisionId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+        withCredentials: false,
+      });
+
+      if (Array.isArray(response.data)) {
+        setGroups(response.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch groups:", error);
+      showToast("Error", "Failed to load groups", 'error');
+    } finally {
+      setIsLoadingGroups(false);
+    }
+  };
 
   const showToast = (title: string, message: string, type: 'success' | 'error') => {
     setToast({ show: true, title, message, type });
@@ -159,8 +215,6 @@ export function AddMemberDialog({ onMemberAdded }: AddMemberDialogProps) {
     setOpen(open);
   };
 
-  const availableGroups: { id: string; name: string }[] = divisionId ? allGroups[divisionId] || [] : [];
-
   return (
     <>
       <Dialog open={open} onOpenChange={handleDialogClose}>
@@ -183,16 +237,20 @@ export function AddMemberDialog({ onMemberAdded }: AddMemberDialogProps) {
           </DialogHeader>
           <div className="flex flex-col space-y-3">
             <div className="space-y-2">
-              <Select value={divisionId} onValueChange={(value) => {
-                setDivision(value);
-                setGroup("");
-              }}>
+              <Select 
+                value={divisionId} 
+                onValueChange={(value) => {
+                  setDivision(value);
+                  setGroup("");
+                }}
+                disabled={isLoadingDivisions}
+              >
                 <SelectTrigger className="flex w-70 h-11 px-3 py-6 border-1 border-gray-300 rounded-[8px]">
-                  <SelectValue placeholder="Select Division" />
+                  <SelectValue placeholder={isLoadingDivisions ? "Loading divisions..." : "Select Division"} />
                 </SelectTrigger>
                 <SelectContent>
                   {divisions.map((div) => (
-                    <SelectItem key={div.id} value={div.id}>
+                    <SelectItem key={div._id} value={div._id}>
                       {div.name}
                     </SelectItem>
                   ))}
@@ -201,13 +259,20 @@ export function AddMemberDialog({ onMemberAdded }: AddMemberDialogProps) {
             </div>
 
             <div className="space-y-2">
-              <Select value={groupId} onValueChange={setGroup} disabled={!divisionId}>
+              <Select 
+                value={groupId} 
+                onValueChange={setGroup} 
+                disabled={!divisionId || isLoadingGroups}
+              >
                 <SelectTrigger className="flex w-70 h-11 px-3 py-6 border-1 border-gray-300 rounded-[8px]">
-                  <SelectValue placeholder="Select Group" />
+                  <SelectValue placeholder={
+                    !divisionId ? "Select a division first" :
+                    isLoadingGroups ? "Loading groups..." : "Select Group"
+                  } />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableGroups.map((grp) => (
-                    <SelectItem key={grp.id} value={grp.id}>
+                  {groups.map((grp) => (
+                    <SelectItem key={grp._id} value={grp._id}>
                       {grp.name}
                     </SelectItem>
                   ))}
@@ -273,7 +338,7 @@ export function AddMemberDialog({ onMemberAdded }: AddMemberDialogProps) {
                 onClick={handleInvite}
                 className="flex h-10 w-35 rounded-md items-center justify-center bg-[#003087] cursor-pointer hover:bg-[#002f87a2]"
                 aria-label="Invite"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isLoadingDivisions || isLoadingGroups}
               >
                 <h3 className="text-[#F8F8F8] ml-1">
                   {isSubmitting ? "Adding..." : "Invite"}

@@ -29,6 +29,7 @@ interface TablePaginationProps {
   totalItems: number;
   itemsPerPage: number;
   onPageChange: (page: number) => void;
+  onItemsPerPageChange?: (value: number) => void;
   className?: string;
 }
 
@@ -38,6 +39,7 @@ export function TablePagination({
   totalItems,
   itemsPerPage,
   onPageChange,
+  onItemsPerPageChange,
   className,
 }: TablePaginationProps) {
   const startItem = (currentPage - 1) * itemsPerPage + 1;
@@ -48,26 +50,21 @@ export function TablePagination({
 
     pages.push(1);
 
-    // Calculate range around current page
     const rangeStart = Math.max(2, currentPage - 1);
     const rangeEnd = Math.min(totalPages - 1, currentPage + 1);
 
-    // Add ellipsis if needed before range
     if (rangeStart > 2) {
       pages.push("ellipsis-start");
     }
 
-    // Add pages in range
     for (let i = rangeStart; i <= rangeEnd; i++) {
       pages.push(i);
     }
 
-    // Add ellipsis if needed after range
     if (rangeEnd < totalPages - 1) {
       pages.push("ellipsis-end");
     }
 
-    // Always show last page if more than 1 page
     if (totalPages > 1) {
       pages.push(totalPages);
     }
@@ -77,13 +74,14 @@ export function TablePagination({
 
   const pageNumbers = getPageNumbers();
 
+  const handleItemsPerPageChange = (value: string) => {
+    if (onItemsPerPageChange) {
+      onItemsPerPageChange(Number(value));
+    }
+  };
+
   return (
-    <div
-      className={cn(
-        "p-3 flex items-center justify-between text-sm",
-        className
-      )}
-    >
+    <div className={cn("p-3 flex items-center justify-between text-sm", className)}>
       <div className="flex w-full">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -96,12 +94,9 @@ export function TablePagination({
                 className="flex w-15 h-10 border-1 border-gray-200 rounded-[8px]"
               >
                 <div className="flex">
-                  <div
-                    className="flex w-auto items-center justify-center p-0.5"
-                  >
-                    10
+                  <div className="flex w-auto items-center justify-center p-0.5">
+                    {itemsPerPage}
                   </div>
-
                   <div className="flex items-center p-1">
                     <Img
                       src={DownArrow}
@@ -115,11 +110,15 @@ export function TablePagination({
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56">
-            <DropdownMenuLabel></DropdownMenuLabel>
+            <DropdownMenuLabel>Items per page</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuRadioGroup>
-              <DropdownMenuRadioItem value="top">20</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="bottom">30</DropdownMenuRadioItem>
+            <DropdownMenuRadioGroup
+              value={itemsPerPage.toString()}
+              onValueChange={handleItemsPerPageChange}
+            >
+              <DropdownMenuRadioItem value="10">10</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="20">20</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="30">30</DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -137,9 +136,7 @@ export function TablePagination({
                 e.preventDefault();
                 if (currentPage > 1) onPageChange(currentPage - 1);
               }}
-              className={
-                currentPage === 1 ? "pointer-events-none" : ""
-              }
+              className={currentPage === 1 ? "pointer-events-none" : ""}
             />
           </PaginationItem>
 
@@ -155,7 +152,7 @@ export function TablePagination({
             return (
               <PaginationItem key={`page-${page}`} className="border-1 border-[#003087] rounded-[8px]">
                 <PaginationLink
-                className="text-[#003087]"
+                  className="text-[#003087]"
                   href="#"
                   isActive={currentPage === page}
                   onClick={(e) => {
@@ -176,11 +173,7 @@ export function TablePagination({
                 e.preventDefault();
                 if (currentPage < totalPages) onPageChange(currentPage + 1);
               }}
-              className={
-                currentPage === totalPages
-                  ? "pointer-events-none"
-                  : ""
-              }
+              className={currentPage === totalPages ? "pointer-events-none" : ""}
             />
           </PaginationItem>
         </PaginationContent>

@@ -41,8 +41,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setAccessToken(token);
       setRole(savedRole);
       setIsAuthenticated(true);
-    } else {
-      logout(false);
     }
 
     setLoading(false);

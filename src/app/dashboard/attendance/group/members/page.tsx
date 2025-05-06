@@ -1,110 +1,171 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import AttendanceTable from "@/components/pages/attendance/AttendanceTable";
 import { TableFilter } from "@/components/common/TableFilter";
 import { TablePagination } from "@/components/common/TablePagination";
-
-// Sample data
-// Define the Member type
-interface Member {
-  id: string;
-  name: string;
-  avatar: string;
-  attendance: string;
-  year: string;
-  status: string;
-}
-
-const sampleMembers: Member[] = [
-  {
-    id: "UGR/5800/14",
-    name: "Kiya Kebe",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Active",
-    year: "4th",
-    status: "OnCampus",
-  },
-  {
-    id: "UGR/5870/14",
-    name: "Mohammed Sadik",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Active",
-    year: "5th",
-    status: "OffCampus",
-  },
-  {
-    id: "UGR/5850/14",
-    name: "Hussein Beshir",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Needs Attention",
-    year: "3rd",
-    status: "Withdrawn",
-  },
-  {
-    id: "UGR/5340/14",
-    name: "Estifanos Tesfaye",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Inactive",
-    year: "4th",
-    status: "Withdrawn",
-  },
-  {
-    id: "UGR/2840/14",
-    name: "Mahelet Yared",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Needs Attention",
-    year: "5th",
-    status: "Withdrawn",
-  },
-  {
-    id: "UGR/1800/14",
-    name: "Kiya Kebe",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Active",
-    year: "4th",
-    status: "OnCampus",
-  },
-  {
-    id: "UGR/1870/14",
-    name: "Mohammed Sadik",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Active",
-    year: "5th",
-    status: "OffCampus",
-  },
-  {
-    id: "UGR/1850/14",
-    name: "Hussein Beshir",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Needs Attention",
-    year: "3rd",
-    status: "Withdrawn",
-  },
-  {
-    id: "UGR/1340/14",
-    name: "Estifanos Tesfaye",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Inactive",
-    year: "4th",
-    status: "Withdrawn",
-  },
-  {
-    id: "UGR/1840/14",
-    name: "Mahelet Yared",
-    avatar: "/placeholder.svg?height=40&width=40",
-    attendance: "Needs Attention",
-    year: "5th",
-    status: "Withdrawn",
-  },
-];
+import { useSearchParams } from "next/navigation";
+import api from "@/lib/axios";
+import Cookies from "js-cookie";
 
 export default function TableUsage() {
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [pendingAttendance, setPendingAttendance] = useState<
+    Record<string, "present" | "absent">
+  >({});
+  const [allMembers, setAllMembers] = useState<any[]>([]);
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: "success" | "error";
+  }>({ show: false, message: "", type: "success" });
+  const [sessionDate, setSessionDate] = useState<string>("");
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get("sessionId");
+
+  // Fetch session date when sessionId changes
+  useEffect(() => {
+    const fetchSessionDate = async () => {
+      if (!sessionId) return;
+
+      try {
+        const token = Cookies.get("accessToken");
+        if (!token) return;
+
+        const response = await api.get(`/session/${sessionId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+          withCredentials: false,
+        });
+
+        setSessionDate(response.data.date);
+      } catch (err) {
+        console.error("Failed to fetch session date:", err);
+      }
+    };
+
+    fetchSessionDate();
+  }, [sessionId]);
+
+  // Fetch all members data (unchanged from original)
+  useEffect(() => {
+    const fetchMembers = async () => {
+      if (!sessionId) return;
+
+      try {
+        const token = Cookies.get("accessToken");
+        if (!token) return;
+
+        const response = await api.get(`/session/${sessionId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+          withCredentials: false,
+        });
+
+        if (response.data?.members) {
+          setAllMembers(response.data.members);
+        }
+      } catch (err) {
+        console.error("Failed to fetch members:", err);
+      }
+    };
+
+    fetchMembers();
+  }, [sessionId]);
+
+  // Filter members based on search term (frontend-only)
+  const filteredMembers = useMemo(() => {
+    if (!searchTerm.trim()) return allMembers;
+    
+    return allMembers.filter(member => {
+      const fullName = `${member.personal_info?.first_name || ''} ${member.personal_info?.last_name || ''}`.toLowerCase();
+      const email = member.email.toLowerCase();
+      return fullName.includes(searchTerm.toLowerCase()) || 
+             email.includes(searchTerm.toLowerCase());
+    });
+  }, [allMembers, searchTerm]);
+
+  // Paginate members (frontend-only)
+  const paginatedMembers = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredMembers.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredMembers, currentPage, itemsPerPage]);
+
+  // Show toast message
+  const showToast = (message: string, type: "success" | "error") => {
+    setToast({ show: true, message, type });
+    setTimeout(
+      () => setToast({ show: false, message: "", type: "success" }),
+      3000
+    );
+  };
+
+  // Save all attendance changes (unchanged from original)
+  const saveAllAttendance = async () => {
+    if (!sessionId || Object.keys(pendingAttendance).length === 0) {
+      showToast("No attendance changes to save", "error");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const token = Cookies.get("accessToken");
+      if (!token) throw new Error("No authentication token");
+
+      const attendanceRecords = Object.entries(pendingAttendance).map(
+        ([profile, status]) => ({
+          profile,
+          session: sessionId,
+          status,
+          sessionDate: sessionDate,
+        })
+      );
+
+      let successCount = 0;
+      for (const record of attendanceRecords) {
+        try {
+          await api.post("/attendance/mark", record, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "true",
+            },
+            withCredentials: false,
+          });
+          successCount++;
+        } catch (err) {
+          console.error(`Failed to save attendance for ${record.profile}:`, err);
+        }
+      }
+
+      if (successCount === attendanceRecords.length) {
+        showToast("All attendance records saved successfully!", "success");
+      } else {
+        showToast(
+          `Saved ${successCount} of ${attendanceRecords.length} records`,
+          "error"
+        );
+      }
+
+      setPendingAttendance({});
+    } catch (err) {
+      console.error("Failed to save attendance:", err);
+      showToast("Failed to save attendance", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // handlers
   const handleSearch = (value: string) => {
-    console.log("Searching for:", value);
+    setSearchTerm(value);
+    setCurrentPage(1); // Reset to first page when searching
   };
 
   const handleFilter = () => {
@@ -113,44 +174,110 @@ export default function TableUsage() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    console.log("Page changed to:", page);
+  };
+
+  const handleItemsPerPageChange = (value: number) => {
+    setItemsPerPage(value);
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
+
+  const handleAttendanceChange = (
+    id: string,
+    status: "present" | "absent" | null
+  ) => {
+    setPendingAttendance((prev) => {
+      if (status === null) {
+        const newStatus = { ...prev };
+        delete newStatus[id];
+        return newStatus;
+      }
+      return { ...prev, [id]: status };
+    });
   };
 
   return (
-    <div className="flex flex-col h-full min-w-240 max-w-full mr-5 my-3 gap-4 rounded-[8px] border-1 border-gray-300">
+    <div className="flex flex-col h-140 min-w-240 max-w-full mr-5 my-3 gap-4 rounded-[8px] border-1 border-gray-300">
+      {/* Toast Notification */}
+      {toast.show && (
+        <div
+          className={`
+          fixed top-4 right-4 z-50 p-4 rounded-md shadow-lg
+          ${toast.type === "success" ? "bg-green-500" : "bg-red-500"} text-white
+          animate-fade-in-out
+        `}
+        >
+          {toast.message}
+        </div>
+      )}
+
       <div className="flex">
         {/* Main Content */}
         <div className="flex-1 gap-3 flex flex-col p-2 m-3">
           {/* Main Content Area */}
           <main className="flex-1 flex flex-col gap-6">
-            {/* Filter */}
+            {/* Table Filter with Save Button */}
             <TableFilter
-              onSearch={handleSearch}
-              onFilter={handleFilter}
               placeholder="Search members..."
               saveButton={true}
+              onSave={saveAllAttendance}
+              saveButtonDisabled={
+                saving || Object.keys(pendingAttendance).length === 0
+              }
+              saveButtonText={saving ? "Saving..." : "Save"}
+              onSearch={handleSearch}
+              onFilter={handleFilter}
             />
             <div>
               {/* Attendance Table */}
-              <div className="grid grid-cols-3 gap-4 border-b py-3 text-sm font-medium justify-end text-gray-500">
-                <div>Member Name</div>
-                <div className="flex justify-end pr-10">Attendance</div>
-                <div className="flex justify-end pr-15">Excused</div>
+              <div className="flex flex-col min-h-98">
+                <div className="grid grid-cols-3 gap-4 border-b py-3 text-sm font-medium justify-end text-gray-500">
+                  <div>Member Name</div>
+                  <div className="flex justify-end pr-10">Attendance</div>
+                  <div className="flex justify-end pr-15">Excused</div>
+                </div>
+                <AttendanceTable
+                  onAttendanceChange={handleAttendanceChange}
+                  pendingAttendance={pendingAttendance}
+                />
               </div>
-              <AttendanceTable />
 
               {/* Pagination */}
               <TablePagination
                 currentPage={currentPage}
-                totalPages={5}
-                totalItems={42}
-                itemsPerPage={10}
+                totalPages={Math.ceil(filteredMembers.length / itemsPerPage)}
+                totalItems={filteredMembers.length}
+                itemsPerPage={itemsPerPage}
                 onPageChange={handlePageChange}
               />
             </div>
           </main>
         </div>
       </div>
+
+      {/* Toast Animation CSS */}
+      <style jsx>{`
+        @keyframes fadeInOut {
+          0% {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          10% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+          90% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+        }
+        .animate-fade-in-out {
+          animation: fadeInOut 3s ease-in-out forwards;
+        }
+      `}</style>
     </div>
   );
 }

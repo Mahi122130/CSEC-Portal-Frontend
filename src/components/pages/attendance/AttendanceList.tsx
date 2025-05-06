@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import api from "@/lib/axios";
 import Cookies from "js-cookie";
 import { format, parseISO } from "date-fns";
-import { useRouter } from "next/navigation";
 
 // Division and group mappings
 const divisions = [
@@ -60,7 +59,6 @@ const capitalizeFirstLetter = (str: string) => {
 export default function AttendanceList() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -106,10 +104,6 @@ export default function AttendanceList() {
     return format(parseISO(dateString), 'EEEE, dd MMMM yyyy');
   };
 
-  const handleCardClick = (sessionId: string) => {
-    router.push(`/dashboard/attendance/group/?id=${sessionId}`);
-  };
-
   if (loading) {
     return (
       <div className="w-full h-screen pl-2 overflow-y-scroll scrollbar-custom">
@@ -135,19 +129,15 @@ export default function AttendanceList() {
     <div className="w-full pl-2">
       <div className="space-y-2 h-110 overflow-y-scroll scrollbar-custom">
         {sessions.map((session) => (
-          <div 
-            key={session._id} 
-            onClick={() => handleCardClick(session._id)}
-            className="cursor-pointer hover:bg-gray-50 transition-colors"
-          >
-            <AttendanceCard
-              status={capitalizeFirstLetter(session.status) as "Ended" | "Planned"}
-              title={getDivisionName(session.division)}
-              description={session.title}
-              date={formatSessionDate(session.date)}
-              groups={getGroupNames(session.division, session.groups || [])}
-            />
-          </div>
+          <AttendanceCard
+            key={session._id}
+            sessionId={session._id}
+            status={capitalizeFirstLetter(session.status) as "Ended" | "Planned"}
+            title={getDivisionName(session.division)}
+            description={session.title}
+            date={formatSessionDate(session.date)}
+            groups={getGroupNames(session.division, session.groups || [])}
+          />
         ))}
         {sessions.length === 0 && (
           <div className="text-center text-gray-500 py-8">
