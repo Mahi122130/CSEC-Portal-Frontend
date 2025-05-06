@@ -120,10 +120,10 @@ export default function MembersPage() {
               onFilter={() => console.log("Filter clicked")}
               placeholder="Search members..."
               addMembersButton={true}
-              importButton={true}
+              importButton={false}
             />
             <div>
-              <MembersTable members={paginatedMembers} />
+              <MembersTable apiMembers={[]} />
               {filteredMembers.length > 0 && (
                 <TablePagination
                   currentPage={currentPage}

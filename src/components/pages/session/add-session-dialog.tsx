@@ -26,7 +26,7 @@ export default function AddSessionForm({ onCancel }: AddSessionFormProps) {
         <div className="space-y-4">
           <div>
             <Label htmlFor="session-title">Session Title</Label>
-            <Input id="session-title" placeholder="Enter session title" />
+            <Input id="session-title" placeholder="Enter session title" className="w-50 justify-start text-left font-normal p-2 border-1 border-gray-200 rounded-[10px]" />
           </div>
 
           <div>
@@ -48,8 +48,8 @@ export default function AddSessionForm({ onCancel }: AddSessionFormProps) {
             <Popover open={showCalendar} onOpenChange={setShowCalendar}>
               <PopoverTrigger asChild>
                 <Button
-                  variant="outline"
-                  className="w-full justify-start text-left font-normal"
+                  variant="none"
+                  className="w-50 justify-start text-left font-normal p-2 border-1 border-gray-200 rounded-[10px]"
                   onClick={() => setShowCalendar(true)}
                 >
                   <Calendar className="mr-2 h-4 w-4" />
@@ -111,10 +111,10 @@ export default function AddSessionForm({ onCancel }: AddSessionFormProps) {
       </div>
 
       <div className="flex justify-between mt-8">
-        <Button variant="outline" onClick={onCancel}>
+        <Button variant="none" onClick={onCancel} className="h-10 rounded-[8px] p-2 cursor-pointer">
           Cancel
         </Button>
-        <Button className="bg-[#003081] rounded-[8px] text-white hover:bg-[#002060]">Create</Button>
+        <Button className="bg-[#003081] h-10 rounded-[8px] p-2 text-white hover:bg-[#00206077] cursor-pointer">Create</Button>
       </div>
     </div>
   )

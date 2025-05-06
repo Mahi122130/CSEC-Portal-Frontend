@@ -35,7 +35,7 @@ export default function TableUsage() {
               onFilter={handleFilter}
               placeholder="Search members..."
               addMembersButton={true}
-              importButton={true}
+              importButton={false}
             />
             <div>
               {/* Table */}
