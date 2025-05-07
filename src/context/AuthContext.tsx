@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       Cookies.set('accessToken', accessToken, cookieOptions);
       Cookies.set('role', role, cookieOptions);
-      if (accessToken) {
+      if (refreshToken) {
         Cookies.set('refreshToken', refreshToken, cookieOptions);
       }
 
