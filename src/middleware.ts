@@ -12,7 +12,7 @@ export async function middleware(request: NextRequest) {
 
   const accessToken = request.cookies.get('accessToken')?.value;
 
-  if (!accessToken || isTokenExpired(accessToken)) {
+  if (!accessToken) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', path);
     return NextResponse.redirect(loginUrl);
@@ -24,12 +24,3 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: ['/((?!api|_next|favicon.ico).*)'],
 };
-
-function isTokenExpired(token: string) {
-  try {
-    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-    return Date.now() >= payload.exp * 1000;
-  } catch {
-    return true;
-  }
-}
