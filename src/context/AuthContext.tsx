@@ -23,21 +23,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const router = useRouter();
 
-  const isTokenExpired = (token: string | null) => {
-    if (!token) return true;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return Date.now() >= payload.exp * 1000;
-    } catch {
-      return true;
-    }
-  };
-
   useEffect(() => {
     const token = Cookies.get('accessToken');
     const savedRole = Cookies.get('role');
 
-    if (token && savedRole && !isTokenExpired(token)) {
+    if (token && savedRole) {
       setAccessToken(token);
       setRole(savedRole);
       setIsAuthenticated(true);
