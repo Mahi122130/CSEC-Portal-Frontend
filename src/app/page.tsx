@@ -18,7 +18,12 @@ const techIcons = [
 
 export default function Home() {
   const [currentSnippet, setCurrentSnippet] = useState(0);
+  const [isClient, setIsClient] = useState(false);
   const controls = useAnimation();
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -35,6 +40,10 @@ export default function Home() {
     });
   }, [controls]);
 
+  if (!isClient) {
+    return null; // or return a loading skeleton
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-blue-900 text-white overflow-hidden">
       {/* Floating Tech Icons */}
@@ -43,8 +52,8 @@ export default function Home() {
           <motion.div
             key={i}
             initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
+              x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000),
+              y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1000),
               rotate: Math.random() * 360
             }}
             animate={{
