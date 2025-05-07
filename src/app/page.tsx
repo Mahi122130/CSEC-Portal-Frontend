@@ -19,7 +19,6 @@ const techIcons = [
 export default function Home() {
   const [currentSnippet, setCurrentSnippet] = useState(0);
   const controls = useAnimation();
-  const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {

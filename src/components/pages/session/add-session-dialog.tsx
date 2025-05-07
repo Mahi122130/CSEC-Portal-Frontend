@@ -101,7 +101,7 @@ export default function AddSessionForm({ onCancel }: { onCancel: () => void }) {
       showToast("Session created successfully!", 'success')
       setTimeout(() => {
         onCancel()
-      }, 1500)
+      }, 300)
     } catch (err) {
       console.error("Failed to create session:", err)
       showToast("Failed to create session", 'error')
@@ -110,7 +110,7 @@ export default function AddSessionForm({ onCancel }: { onCancel: () => void }) {
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({show: true, message, type})
-    setTimeout(() => setToast({show: false, message: '', type: 'success'}), 3000)
+    setTimeout(() => setToast({show: false, message: '', type: 'success'}), 300)
   }
 
   const handleGroupToggle = (groupId: string) => {
@@ -123,7 +123,7 @@ export default function AddSessionForm({ onCancel }: { onCancel: () => void }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col items-center space-y-4">
       {/* Toast Notification */}
       {toast.show && (
         <div className={`

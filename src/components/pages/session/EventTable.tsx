@@ -15,67 +15,80 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
-
-// Sample data
-const events = [
-  {
-    id: 1,
-    date: "July 01, 2023",
-    title: "Cyber Security Tutorial",
-    type: "CPD",
-    visibility: "Public",
-    status: "Started",
-  },
-  {
-    id: 2,
-    date: "July 02, 2023",
-    title: "Cyber Security Tutorial",
-    type: "CPD",
-    visibility: "Public",
-    status: "Started",
-  },
-  { id: 3, date: "July 03, 2023", title: "Weekly session", type: "CPD", visibility: "Members", status: "Started" },
-  {
-    id: 4,
-    date: "July 04, 2023",
-    title: "Cyber Security Tutorial",
-    type: "CPD",
-    visibility: "Public",
-    status: "Ended",
-  },
-  { id: 5, date: "July 05, 2023", title: "Contest", type: "CPD", visibility: "Public", status: "Ended" },
-  { id: 6, date: "July 06, 2023", title: "Contest", type: "CPD", visibility: "Public", status: "Planned" },
-  {
-    id: 7,
-    date: "July 07, 2023",
-    title: "Cyber Security Tutorial",
-    type: "CPD",
-    visibility: "Public",
-    status: "Started",
-  },
-  { id: 8, date: "July 08, 2023", title: "Contest", type: "Dev", visibility: "Public", status: "Ended" },
-  { id: 9, date: "July 09, 2023", title: "Weekly session", type: "Dev", visibility: "Members", status: "Started" },
-  {
-    id: 10,
-    date: "July 09, 2023",
-    title: "Cyber Security Tutorial",
-    type: "Dev",
-    visibility: "Public",
-    status: "Started",
-  },
-  { id: 11, date: "July 09, 2023", title: "Weekly session", type: "Dev", visibility: "Public", status: "Started" },
-  { id: 12, date: "July 09, 2023", title: "Game Night", type: "Dev", visibility: "Public", status: "Started" },
-  {
-    id: 13,
-    date: "July 09, 2023",
-    title: "Cyber Security Tutorial",
-    type: "Dev",
-    visibility: "Public",
-    status: "Started",
-  },
-]
+import { useEffect, useState } from "react"
+import Cookies from "js-cookie"
+import api from "@/lib/axios"
+import { format } from "date-fns"
 
 export default function EventTable() {
+  const [events, setEvents] = useState<any[]>([])
+  const [divisions, setDivisions] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = Cookies.get('accessToken')
+        if (!token) return
+
+        // Fetch events
+        const eventsResponse = await api.get('/event', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'ngrok-skip-browser-warning': 'true'
+          },
+          withCredentials: false
+        })
+
+        // Fetch divisions
+        const divisionsResponse = await api.get('/division', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'ngrok-skip-browser-warning': 'true'
+          },
+          withCredentials: false
+        })
+
+        if (eventsResponse.data) {
+          setEvents(eventsResponse.data)
+        }
+        if (divisionsResponse.data?.data) {
+          setDivisions(divisionsResponse.data.data)
+        }
+      } catch (err) {
+        console.error("Failed to fetch data:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  // Get division name by ID
+  const getDivisionName = (divisionId: string) => {
+    const division = divisions.find(d => d._id === divisionId)
+    return division ? division.name : divisionId
+  }
+
+  // Pagination logic
+  const totalPages = Math.ceil(events.length / itemsPerPage)
+  const paginatedEvents = events.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  )
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return format(date, "MMMM dd, yyyy")
+  }
+
+  if (loading) {
+    return <div>Loading events...</div>
+  }
+
   return (
     <div className="border rounded-md">
       <Table>
@@ -90,16 +103,16 @@ export default function EventTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {events.map((event) => (
-            <TableRow key={event.id}>
-              <TableCell className="font-medium">{event.date}</TableCell>
+          {paginatedEvents.map((event) => (
+            <TableRow key={event._id}>
+              <TableCell className="font-medium">{formatDate(event.date)}</TableCell>
               <TableCell>{event.title}</TableCell>
-              <TableCell>{event.type}</TableCell>
+              <TableCell>{getDivisionName(event.division)}</TableCell>
               <TableCell>
                 <Badge
                   className={`${
-                    event.visibility === "Public" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                  } hover:bg-opacity-80`}
+                    event.visibility === "public" ? "bg-green-50 text-green-500" : "bg-red-50 text-red-500"
+                  } hover:bg-opacity-80 capitalize`}
                 >
                   {event.visibility}
                 </Badge>
@@ -107,12 +120,12 @@ export default function EventTable() {
               <TableCell>
                 <Badge
                   className={`${
-                    event.status === "Started"
-                      ? "bg-green-100 text-green-800"
-                      : event.status === "Ended"
-                        ? "bg-red-100 text-red-800"
-                        : "bg-yellow-100 text-yellow-800"
-                  } hover:bg-opacity-80`}
+                    event.status === "ended"
+                      ? "bg-red-50 text-red-500"
+                      : event.status === "planned"
+                        ? "bg-yellow-50 text-yellow-500"
+                        : "bg-green-50 text-green-500"
+                  } hover:bg-opacity-80 capitalize`}
                 >
                   {event.status}
                 </Badge>
@@ -134,7 +147,13 @@ export default function EventTable() {
       <div className="flex items-center justify-between px-4 py-2 border-t">
         <div className="flex items-center space-x-2">
           <span className="text-sm text-gray-500">Showing</span>
-          <Select defaultValue="10">
+          <Select 
+            value={itemsPerPage.toString()}
+            onValueChange={(value) => {
+              setItemsPerPage(Number(value))
+              setCurrentPage(1)
+            }}
+          >
             <SelectTrigger className="w-16 h-8">
               <SelectValue />
             </SelectTrigger>
@@ -144,29 +163,44 @@ export default function EventTable() {
               <SelectItem value="50">50</SelectItem>
             </SelectContent>
           </Select>
-          <span className="text-sm text-gray-500">Showing 1 to 10 out of 50 records</span>
+          <span className="text-sm text-gray-500">
+            Showing {paginatedEvents.length} of {events.length} records
+          </span>
         </div>
         <Pagination>
           <PaginationContent>
             <PaginationItem>
-              <PaginationPrevious href="#" />
+              <PaginationPrevious 
+                href="#" 
+                onClick={(e) => {
+                  e.preventDefault()
+                  if (currentPage > 1) setCurrentPage(currentPage - 1)
+                }}
+              />
             </PaginationItem>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <PaginationItem key={page}>
+                <PaginationLink 
+                  href="#" 
+                  isActive={currentPage === page}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setCurrentPage(page)
+                  }}
+                  className="rounded-[8px]"
+                >
+                  {page}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
             <PaginationItem>
-              <PaginationLink href="#" isActive>
-                1
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">2</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">3</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">4</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext href="#" />
+              <PaginationNext 
+                href="#" 
+                onClick={(e) => {
+                  e.preventDefault()
+                  if (currentPage < totalPages) setCurrentPage(currentPage + 1)
+                }}
+              />
             </PaginationItem>
           </PaginationContent>
         </Pagination>
