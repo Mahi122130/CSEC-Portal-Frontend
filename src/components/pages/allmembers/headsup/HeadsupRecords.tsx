@@ -61,7 +61,6 @@ export default function HeadsUpContent() {
       return data.filter((item: HeadsUpItem) => item.status === "approved");
     } catch (error) {
       console.error('Error fetching headsUp data:', error);
-      showToast('Failed to fetch heads-up data', true);
       return [];
     }
   };
