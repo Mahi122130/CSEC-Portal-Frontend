@@ -22,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import api from "@/lib/axios";
 import Cookies from "js-cookie";
 
@@ -44,66 +44,25 @@ interface ApiMember {
   __v: number;
 }
 
-interface Division {
-  _id: string;
-  name: string;
-  members: string[];
-  coordinators: any[];
-  year_of_establishment: number;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-}
-
 interface MembersTableProps {
   apiMembers: ApiMember[];
+  divisionName: string;
+  groupName?: string;
   className?: string;
   onDeleteSuccess?: () => void;
 }
 
-export function MembersTable({ apiMembers, className, onDeleteSuccess }: MembersTableProps) {
+export function MembersTable({
+  apiMembers,
+  divisionName,
+  className,
+  onDeleteSuccess,
+}: MembersTableProps) {
+  const currentUserRole = Cookies.get("role");
   const router = useRouter();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<ApiMember | null>(null);
-  const [divisions, setDivisions] = useState<Division[]>([]);
-  const [loadingDivisions, setLoadingDivisions] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    const fetchDivisions = async () => {
-      try {
-        const token = Cookies.get('accessToken');
-        if (!token) return;
-
-        const response = await api.get('/division', {
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            'ngrok-skip-browser-warning': 'true'
-          }
-        });
-
-        if (response.data && Array.isArray(response.data.data)) {
-          setDivisions(response.data.data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch divisions:", error);
-      } finally {
-        setLoadingDivisions(false);
-      }
-    };
-
-    fetchDivisions();
-  }, []);
-
-  const getMemberDivision = (memberId: string) => {
-    if (loadingDivisions) return "Loading...";
-    
-    const division = divisions.find(div => 
-      div.members.includes(memberId)
-    );
-    
-    return division ? division.name : "No Division";
-  };
 
   const getMemberDisplayData = (member: ApiMember) => {
     const name =
@@ -129,7 +88,8 @@ export function MembersTable({ apiMembers, className, onDeleteSuccess }: Members
 
     const status = "OnCampus";
     const attendance = "Active";
-    const specialization = member.personal_info?.specialization || "Not specified";
+    const specialization =
+      member.personal_info?.specialization || "Not specified";
 
     return {
       id,
@@ -140,7 +100,7 @@ export function MembersTable({ apiMembers, className, onDeleteSuccess }: Members
       year,
       status,
       attendance,
-      specialization
+      specialization,
     };
   };
 
@@ -152,17 +112,17 @@ export function MembersTable({ apiMembers, className, onDeleteSuccess }: Members
 
   const confirmDelete = async () => {
     if (!memberToDelete) return;
-    
+
     setIsDeleting(true);
     try {
-      const token = Cookies.get('accessToken');
-      if (!token) throw new Error('Authentication required');
+      const token = Cookies.get("accessToken");
+      if (!token) throw new Error("Authentication required");
 
       await api.delete(`/user/${memberToDelete._id}`, {
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`,
-          'ngrok-skip-browser-warning': 'true'
-        }
+          "ngrok-skip-browser-warning": "true",
+        },
       });
 
       if (onDeleteSuccess) {
@@ -177,7 +137,7 @@ export function MembersTable({ apiMembers, className, onDeleteSuccess }: Members
   };
 
   if (!apiMembers || apiMembers.length === 0) {
-    return <div className="p-4 text-gray-500">No members found in this group</div>;
+    return <div className="p-4 text-gray-500">No members found</div>;
   }
 
   return (
@@ -189,10 +149,14 @@ export function MembersTable({ apiMembers, className, onDeleteSuccess }: Members
               <TableHead className="text-gray-500">Member Name</TableHead>
               <TableHead className="text-gray-500">Member ID</TableHead>
               <TableHead className="text-gray-500">Division</TableHead>
-              <TableHead className="text-gray-500">Specialization</TableHead>
+              <TableHead className="text-gray-500">Attendance</TableHead>
               <TableHead className="text-gray-500">Year</TableHead>
               <TableHead className="text-gray-500">Status</TableHead>
-              <TableHead className="text-gray-500 text-center">Actions</TableHead>
+              {currentUserRole !== "member" && (
+                <TableHead className="text-gray-500 text-center">
+                  Actions
+                </TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -225,12 +189,25 @@ export function MembersTable({ apiMembers, className, onDeleteSuccess }: Members
                   <TableCell>{displayData.id}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize">
-                      {getMemberDivision(member._id)}
+                      {divisionName}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">
-                      {displayData.specialization}
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        displayData.attendance === "Active"
+                          ? "text-green-500 bg-green-50"
+                          : "",
+                        displayData.attendance === "Inactive"
+                          ? "text-red-500 bg-red-50"
+                          : "",
+                        displayData.attendance === "Needs Attention"
+                          ? "text-amber-500 bg-amber-50"
+                          : ""
+                      )}
+                    >
+                      {displayData.attendance}
                     </Badge>
                   </TableCell>
                   <TableCell>{displayData.year}</TableCell>
@@ -242,18 +219,20 @@ export function MembersTable({ apiMembers, className, onDeleteSuccess }: Members
                       {displayData.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex justify-center">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 hover:bg-transparent group"
-                        onClick={(e) => handleDeleteClick(member, e)}
-                      >
-                        <Trash2 className="h-4 w-4 group-hover:text-red-500" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  {currentUserRole !== "member" && (
+                    <TableCell>
+                      <div className="flex justify-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 hover:bg-transparent group"
+                          onClick={(e) => handleDeleteClick(member, e)}
+                        >
+                          <Trash2 className="h-4 w-4 group-hover:text-red-500" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               );
             })}
@@ -266,24 +245,28 @@ export function MembersTable({ apiMembers, className, onDeleteSuccess }: Members
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete {memberToDelete?.personal_info?.first_name 
-                ? `${memberToDelete.personal_info.first_name} ${memberToDelete.personal_info.last_name || ''}` 
-                : memberToDelete?.email}?
+              Are you sure you want to delete{" "}
+              {memberToDelete?.personal_info?.first_name
+                ? `${memberToDelete.personal_info.first_name} ${
+                    memberToDelete.personal_info.last_name || ""
+                  }`
+                : memberToDelete?.email}
+              ?
               <br />
               This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
               disabled={isDeleting}
               className="rounded-[10px] p-2"
             >
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={confirmDelete}
               disabled={isDeleting}
               className="rounded-[10px] p-2"

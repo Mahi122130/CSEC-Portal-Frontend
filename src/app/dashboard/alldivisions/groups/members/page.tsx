@@ -15,8 +15,11 @@ export default function TableUsage() {
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [divisionName, setDivisionName] = useState("");
+  const [groupName, setGroupName] = useState("");
   const searchParams = useSearchParams();
   const groupId = searchParams.get("groupId");
+  const divisionId = searchParams.get("divisionId");
 
   useEffect(() => {
     const role = Cookies.get("role");
@@ -24,60 +27,87 @@ export default function TableUsage() {
   }, []);
 
   useEffect(() => {
-    const fetchGroupMembers = async () => {
+    const fetchMembers = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
-        const token = Cookies.get('accessToken');
+        const token = Cookies.get("accessToken");
         if (!token) {
           throw new Error("Authentication required");
         }
 
-        if (!groupId) {
-          throw new Error("No group ID provided");
-        }
+        if (groupId) {
+          // Fetch group-specific members
+          const groupResponse = await api.get(`/group/${divisionId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "true",
+            },
+          });
 
-        // First get the group details
-        const groupResponse = await api.get(`/group/${groupId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'ngrok-skip-browser-warning': 'true'
-          }
-        });
+          const groupData = groupResponse.data.find(
+            (g: any) => g._id === groupId
+          );
+          if (!groupData) throw new Error("Group not found");
 
-        const groupData = groupResponse.data;
-        
-        // Then fetch member details for each member in the group
-        const memberDetails = await Promise.all(
-          groupData.members.map((memberId: string) => 
-            api.get(`/user/${memberId}`, {
+          setGroupName(groupData.name);
+
+          // Get division details to get division name and all members
+          const divisionResponse = await api.get(
+            `/division/${groupData.division}`,
+            {
               headers: {
                 Authorization: `Bearer ${token}`,
-                'ngrok-skip-browser-warning': 'true'
-              }
-            }).then(res => res.data.user) // Changed from res.data.user to res.data
-          )
-        );
+                "ngrok-skip-browser-warning": "true",
+              },
+            }
+          );
 
-        setMembers(memberDetails);
+          setDivisionName(divisionResponse.data.name);
+
+          // Filter division members to only those in this group
+          const divisionMembers = divisionResponse.data.members || [];
+          const groupMembers = divisionMembers.filter((member: any) =>
+            groupData.members.includes(member._id)
+          );
+
+          setMembers(groupMembers);
+        } else if (divisionId) {
+          // Fetch all division members
+          const divisionResponse = await api.get(`/division/${divisionId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "true",
+            },
+          });
+
+          const divisionData = divisionResponse.data;
+          setDivisionName(divisionData.name);
+          setMembers(divisionData.members || []);
+        } else {
+          throw new Error("No group or division ID provided");
+        }
       } catch (err) {
-        setError('Failed to load group members. Some information may be incomplete.');
+        setError("Failed to load members. Some information may be incomplete.");
         console.error("Fetch error:", err);
-        
-        if (err instanceof Error && (err.message === "Authentication required" || 
-            (err as any).response?.status === 401)) {
-          window.location.href = '/login';
+
+        if (
+          err instanceof Error &&
+          (err.message === "Authentication required" ||
+            (err as any).response?.status === 401)
+        ) {
+          window.location.href = "/login";
         }
       } finally {
         setLoading(false);
       }
     };
-  
-    if (groupId) {
-      fetchGroupMembers();
+
+    if (groupId || divisionId) {
+      fetchMembers();
     }
-  }, [groupId, refreshKey]);
+  }, [groupId, divisionId, refreshKey]);
 
   const handleSearch = (value: string) => {
     console.log("Searching for:", value);
@@ -93,44 +123,42 @@ export default function TableUsage() {
   };
 
   const handleMemberAdded = () => {
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
   };
 
   const handleDeleteSuccess = () => {
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
   };
 
   if (loading) return <div className="p-4">Loading members...</div>;
   if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
   return (
-    <div className="flex flex-col h-full min-w-240 max-w-full mr-5 my-3 gap-4 rounded-[8px] border-1 border-gray-300">
-      <div className="flex">
-        <div className="flex-1 gap-3 flex flex-col p-2">
-          <main className="flex-1 flex flex-col gap-6">
-            <TableFilter
-              onSearch={handleSearch}
-              onFilter={handleFilter}
-              placeholder="Search members..."
-              addMembersButton={canAddMembers}
-              onMemberAdded={handleMemberAdded}
-            />
-            <div>
-              <MembersTable 
-                apiMembers={members} 
-                onDeleteSuccess={handleDeleteSuccess}
-              />
-              <TablePagination
-                currentPage={currentPage}
-                totalPages={5}
-                totalItems={42}
-                itemsPerPage={10}
-                onPageChange={handlePageChange}
-              />
-            </div>
-          </main>
+    <div className="flex flex-col h-fit min-w-240 max-w-full p-3 mr-5 my-3 gap-4 rounded-[8px] border-1 border-gray-300">
+      <main className="flex-1 flex flex-col gap-6">
+        <TableFilter
+          onSearch={handleSearch}
+          onFilter={handleFilter}
+          placeholder="Search members..."
+          addMembersButton={canAddMembers}
+          onMemberAdded={handleMemberAdded}
+        />
+        <div className="min-h-98">
+          <MembersTable
+            apiMembers={members}
+            divisionName={divisionName}
+            groupName={groupName}
+            onDeleteSuccess={handleDeleteSuccess}
+          />
         </div>
-      </div>
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={5}
+          totalItems={42}
+          itemsPerPage={10}
+          onPageChange={handlePageChange}
+        />
+      </main>
     </div>
   );
 }

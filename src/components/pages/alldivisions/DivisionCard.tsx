@@ -62,7 +62,7 @@ export default function DivisionCard({ division }: DivisionCardProps) {
             >
               <CollapsibleTrigger asChild>
                 <Link
-                  href={`/dashboard/alldivisions/groups/members?groupId=${group.id}`}
+                  href={`/dashboard/alldivisions/groups/members?groupId=${group.id}&divisionId=${division.id}`}
                 >
                   <Button
                     variant="ghost"

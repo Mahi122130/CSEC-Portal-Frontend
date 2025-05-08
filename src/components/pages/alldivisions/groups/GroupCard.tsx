@@ -18,6 +18,7 @@ interface Member {
 
 interface Group {
   id: string;
+  divisionId: string;
   name: string;
   totalMembers: number;
   members: Member[];
@@ -44,7 +45,7 @@ export default function GroupCard({ group, linkText = "View All" }: GroupCardPro
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-xl font-medium">{group.name}</CardTitle>
         <Link 
-          href={`/dashboard/alldivisions/groups/members?groupId=${group.id}`}
+          href={`/dashboard/alldivisions/groups/members?groupId=${group.id}&divisionId=${group.divisionId}`}
           passHref
         >
           <Button

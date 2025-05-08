@@ -109,7 +109,8 @@ export default function GroupOverview({ linkText = "View All" }: { linkText?: st
           <GroupCardComponents
             key={group._id}
             group={{
-              id: divisionId || "unknown-division",
+              id: group._id,
+              divisionId: divisionId || "unknown-division",
               name: group.name,
               totalMembers: group.members.length,
               members: group.memberDetails.map(member => ({
