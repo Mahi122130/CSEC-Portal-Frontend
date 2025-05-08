@@ -1,5 +1,4 @@
 "use client";
-
 import { MdAddCircleOutline } from "react-icons/md";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -11,78 +10,148 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import Cookies from "js-cookie";
+import api from "@/lib/axios";
+import { useSearchParams } from "next/navigation";
 
-export function AddGroupDialog() {
+interface AddGroupDialogProps {
+  onGroupAdded?: () => void;
+}
+
+export function AddGroupDialog({ onGroupAdded }: AddGroupDialogProps) {
   const [open, setOpen] = useState(false);
-  const [group, setGroup] = useState("");
-  const [divisionName, setDivisionName] = useState("");
+  const [groupName, setGroupName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
+  const searchParams = useSearchParams();
+  const divisionId = searchParams.get("divisionId");
 
-  const handleSubmit = () => {
-    // Handle form submission here
-    console.log({ divisionName, group });
-    
-    // Reset form and close dialog
-    setGroup("");
-    setDivisionName("");
-    setOpen(false);
+  const handleSubmit = async () => {
+    if (!groupName) {
+      setToastMessage("Group name is required");
+      setToastType("error");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const token = Cookies.get("accessToken");
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      if (!divisionId) {
+        throw new Error("Division ID is required");
+      }
+
+      await api.post(
+        "/group",
+        {
+          name: groupName,
+          division: divisionId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
+      setToastMessage("Group created successfully!");
+      setToastType("success");
+      setShowToast(true);
+      setGroupName("");
+      setOpen(false);
+      setTimeout(() => onGroupAdded?.(), 3000);
+    } catch (error) {
+      console.error("Failed to create group:", error);
+      setToastMessage("Failed to create group. Please try again.");
+      setToastType("error");
+      setShowToast(true);
+    } finally {
+      setLoading(false);
+      setTimeout(() => setShowToast(false), 3000);
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="default"
-          className="flex rounded-md bg-[#003087] text-white h-12 w-32 items-center justify-center cursor-pointer hover:bg-[#002f87a2]"
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button
+            variant="default"
+            className="flex rounded-md bg-[#003087] text-white h-12 w-32 items-center justify-center cursor-pointer hover:bg-[#002f87a2]"
+          >
+            <div className="flex gap-1 items-center justify-center">
+              <MdAddCircleOutline size={50} />
+              <div>Add Group</div>
+            </div>
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[350px] h-fit p-4 overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold mb-3">
+              Add New Group
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col space-y-3 gap-3">
+            <div className="space-y-2">
+              <Input
+                type="text"
+                placeholder="Group Name"
+                className="flex w-80 h-11 px-3 py-6 border-1 border-gray-300 rounded-[8px]"
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="flex justify-center items-center gap-3">
+              <div className="flex gap-3 items-center justify-center">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => setOpen(false)}
+                  className="flex h-10 w-35 rounded-md items-center justify-center bg-[#34495E0D] cursor-pointer hover:bg-[#48637e0d]"
+                  aria-label="Cancel"
+                  disabled={loading}
+                >
+                  <h3 className="ml-1"> Cancel </h3>
+                </Button>
+              </div>
+
+              <div className="flex gap-5 items-center justify-center">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="flex h-10 w-35 rounded-md items-center justify-center bg-[#003087] cursor-pointer hover:bg-[#002f87a2]"
+                  onClick={handleSubmit}
+                  disabled={loading}
+                >
+                  <h3 className="text-[#F8F8F8] ml-1">
+                    {loading ? "Adding..." : "Add Group"}
+                  </h3>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {showToast && (
+        <div
+          className={`fixed top-4 right-4 p-4 rounded-md shadow-md z-50 ${
+            toastType === "success" ? "bg-green-500" : "bg-red-500"
+          } text-white`}
         >
-          <div className="flex gap-1 items-center justify-center">
-            <MdAddCircleOutline size={50} />
-            <div>Add Group</div>
-          </div>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[350px] h-fit p-4 overflow-hidden">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold mb-3">
-            Add New Group
-          </DialogTitle>
-        </DialogHeader>
-        <div className="flex flex-col space-y-3 gap-3">
-          <div className="space-y-2">
-            <Input
-              type="text"
-              placeholder="Group Name"
-              className="flex w-80 h-11 px-3 py-6 border-1 border-gray-300 rounded-[8px]"
-              value={divisionName}
-              onChange={(e) => setDivisionName(e.target.value)}
-            />
-          </div>
-
-          <div className="flex justify-center items-center gap-3">
-            <div className="flex gap-3 items-center justify-center">
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => setOpen(false)}
-                className="flex h-10 w-35 rounded-md items-center justify-center bg-[#34495E0D] cursor-pointer hover:bg-[#48637e0d]"
-                aria-label="Cancel"
-              >
-                <h3 className="ml-1"> Cancel </h3>
-              </Button>
-            </div>
-
-            <div className="flex gap-5 items-center justify-center">
-              <Button
-                variant="outline"
-                size="icon"
-                className="flex h-10 w-35 rounded-md items-center justify-center bg-[#003087] cursor-pointer hover:bg-[#002f87a2]"
-                onClick={handleSubmit}
-              >
-                <h3 className="text-[#F8F8F8] ml-1">Add Group</h3>
-              </Button>
-            </div>
-          </div>
+          {toastMessage}
         </div>
-      </DialogContent>
-    </Dialog>
+      )}
+    </>
   );
 }

@@ -36,7 +36,7 @@ export default function DivisionCard({ division }: DivisionCardProps) {
   };
 
   return (
-    <Card className="border-1 border-gray-300 rounded-[8px] p-3 dark:bg-gray-800 dark:border-gray-700 min-w-124 ml-1 mb-1">
+    <Card className="border-1 border-gray-300 rounded-[8px] p-3 dark:bg-gray-800 dark:border-gray-700 max-w-145 ml-1 mb-1">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-xl font-medium">{division.name}</CardTitle>
         <Link href={`/dashboard/alldivisions/groups?divisionId=${division.id}`}>

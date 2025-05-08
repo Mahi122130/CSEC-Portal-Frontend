@@ -1,5 +1,4 @@
 "use client";
-
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { LuSearch } from "react-icons/lu";
@@ -10,15 +9,15 @@ interface TableFilterProps {
   onFilter?: () => void;
   placeholder?: string;
   className?: string;
+  onGroupAdded?: () => void;
 }
 
 export function GroupsHeader({
   className,
+  onGroupAdded
 }: TableFilterProps) {
   return (
-    <div
-      className={cn("flex justify-between items-center p-5", className)}
-    >
+    <div className={cn("flex justify-between items-center p-5", className)}>
       <div className="relative flex justify-center gap-1 p-2 border-1 border-gray-300 rounded-[8px] h-12 items-center focus:outline-blue-600 focus:border-blue-600">
         <LuSearch size={23} />
         <div>
@@ -31,7 +30,7 @@ export function GroupsHeader({
       </div>
       <div className="flex gap-3">
         <div>
-          <AddGroupDialog  />
+          <AddGroupDialog onGroupAdded={onGroupAdded} />
         </div>
       </div>
     </div>

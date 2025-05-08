@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import GroupCardComponents from "@/components/pages/alldivisions/groups/GroupCard";
 import api from "@/lib/axios";
@@ -49,7 +48,6 @@ export default function GroupOverview({ linkText = "View All" }: { linkText?: st
 
         let groupsResponse;
         if (divisionId) {
-          // Fetch all groups for division if divisionId is provided
           const response = await api.get(`/group/${divisionId}`, {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -61,7 +59,6 @@ export default function GroupOverview({ linkText = "View All" }: { linkText?: st
           throw new Error("No division or group ID provided");
         }
 
-        // Fetch member details for each group
         const groupsWithMembers = await Promise.all(
           groupsResponse.map(async (group: Group) => {
             const memberDetails = await Promise.all(
@@ -86,7 +83,6 @@ export default function GroupOverview({ linkText = "View All" }: { linkText?: st
       } catch (err) {
         setError('Failed to load group data. Some information may be incomplete.');
         console.error("Fetch error:", err);
-        
       } finally {
         setLoading(false);
       }

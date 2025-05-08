@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
@@ -43,133 +42,150 @@ interface FrontendDivision {
   }[];
 }
 
+interface DivisionsOverviewProps {
+  searchQuery?: string;
+}
+
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
   withCredentials: true,
 });
 
-export default function DivisionsOverview() {
-  const [searchQuery] = useState("");
+export default function DivisionsOverview({
+  searchQuery = ""
+}: DivisionsOverviewProps) {
   const [divisions, setDivisions] = useState<FrontendDivision[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchDivisionsAndGroups = async () => {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        const token = Cookies.get('accessToken');
-        if (!token) {
-          throw new Error("Authentication required");
-        }
+  const fetchDivisionsAndGroups = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const token = Cookies.get("accessToken");
+      if (!token) {
+        throw new Error("Authentication required");
+      }
 
-        // First fetch all divisions
-        const divisionsResponse = await api.get('/division', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'ngrok-skip-browser-warning': 'true'
-          }
-        });
+      const divisionsResponse = await api.get("/division", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
 
-        const allDivisions: Division[] = divisionsResponse.data.data;
+      const allDivisions: Division[] = divisionsResponse.data.data;
 
-        // Then fetch groups for each division
-        const results = await Promise.all(
-          allDivisions.map(async (division) => {
-            try {
-              const response = await api.get(`/group/${division._id}`, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  'ngrok-skip-browser-warning': 'true'
-                }
-              });
-              
-              const groups: Group[] = response.data;
-              
-              const groupsWithMembers = await Promise.all(
-                groups.map(async (group) => {
-                  try {
-                    if (group.members.length === 0) {
-                      return {
-                        id: group._id,
-                        name: group.name,
-                        members: 0,
-                        memberDetails: []
-                      };
-                    }
+      const results = await Promise.all(
+        allDivisions.map(async (division) => {
+          try {
+            const response = await api.get(`/group/${division._id}`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "ngrok-skip-browser-warning": "true",
+              },
+            });
 
-                    const memberDetails = await Promise.all(
-                      group.members.map(memberId => 
-                        api.get(`/user/${memberId}`, {
-                          headers: {
-                            Authorization: `Bearer ${token}`,
-                            'ngrok-skip-browser-warning': 'true'
-                          }
-                        }).then(res => res.data)
-                      )
-                    );
+            const groups: Group[] = response.data;
 
+            const groupsWithMembers = await Promise.all(
+              groups.map(async (group) => {
+                try {
+                  if (group.members.length === 0) {
                     return {
                       id: group._id,
                       name: group.name,
-                      members: group.members.length,
-                      memberDetails
-                    };
-                  } catch (err) {
-                    console.error(`Error fetching members for group ${group._id}`);
-                    return {
-                      id: group._id,
-                      name: group.name,
-                      members: group.members.length,
-                      memberDetails: []
+                      members: 0,
+                      memberDetails: [],
                     };
                   }
-                })
-              );
-              
-              return {
-                id: division._id,
-                name: division.name,
-                totalMembers: groupsWithMembers.reduce((sum, group) => sum + group.members, 0),
-                groups: groupsWithMembers
-              };
-            } catch (err) {
-              console.error(`Error processing ${division.name}`);
-              return {
-                id: division._id,
-                name: division.name,
-                totalMembers: 0,
-                groups: []
-              };
-            }
-          })
-        );
-        
-        setDivisions(results);
-      } catch (err) {
-        setError('Failed to load division data. Some information may be incomplete.');
-        console.error("Overall fetch error:", err);
-        
-        if (err instanceof Error && (err.message === "Authentication required" || 
-            (err as any).response?.status === 401)) {
-          window.location.href = '/login';
-        }
-      } finally {
-        setLoading(false);
+
+                  const memberDetails = await Promise.all(
+                    group.members.map((memberId) =>
+                      api
+                        .get(`/user/${memberId}`, {
+                          headers: {
+                            Authorization: `Bearer ${token}`,
+                            "ngrok-skip-browser-warning": "true",
+                          },
+                        })
+                        .then((res) => res.data)
+                    )
+                  );
+
+                  return {
+                    id: group._id,
+                    name: group.name,
+                    members: group.members.length,
+                    memberDetails,
+                  };
+                } catch (err) {
+                  console.error(`Error fetching members for group ${group._id}`);
+                  return {
+                    id: group._id,
+                    name: group.name,
+                    members: group.members.length,
+                    memberDetails: [],
+                  };
+                }
+              })
+            );
+
+            return {
+              id: division._id,
+              name: division.name,
+              totalMembers: groupsWithMembers.reduce(
+                (sum, group) => sum + group.members,
+                0
+              ),
+              groups: groupsWithMembers,
+            };
+          } catch (err) {
+            console.error(`Error processing ${division.name}`);
+            return {
+              id: division._id,
+              name: division.name,
+              totalMembers: 0,
+              groups: [],
+            };
+          }
+        })
+      );
+
+      setDivisions(results);
+    } catch (err) {
+      setError("Failed to load division data. Some information may be incomplete.");
+      console.error("Overall fetch error:", err);
+
+      if (err instanceof Error && (err.message === "Authentication required" || 
+          (err as any).response?.status === 401)) {
+        window.location.href = "/login";
       }
-    };
-  
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchDivisionsAndGroups();
   }, []);
-    
+
   const filteredDivisions = divisions.filter((division) =>
     division.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (loading) return <div className="p-4">Loading divisions...</div>;
-  if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="p-4 text-red-500">Error: {error}</div>;
+  }
 
   const rows = [];
   for (let i = 0; i < filteredDivisions.length; i += 2) {
