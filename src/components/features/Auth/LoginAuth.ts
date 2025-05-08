@@ -27,7 +27,7 @@ export async function handleLogin(data: FormData) {
       path: '/',
       sameSite: 'lax' as const,
       secure: process.env.NODE_ENV === 'production',
-      ...(data.rememberMe ? { expires: 7 } : {}),
+      ...(data.rememberMe ? { expires: 7 } : { expires: 1 }),
     };
 
     Cookies.set('accessToken', accessToken, cookieOptions);

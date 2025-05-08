@@ -11,7 +11,6 @@ interface AuthContextType {
   isAuthenticated: boolean;
   accessToken: string | null;
   login: (email: string, password: string, rememberMe: boolean) => Promise<void>;
-  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -45,7 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         path: '/',
         sameSite: 'lax' as const,
         secure: process.env.NODE_ENV === 'production',
-        ...(rememberMe ? { expires: 7 } : {}),
+        ...(rememberMe ? { expires: 7 } : { expires: 1 }),
       };
 
       Cookies.set('accessToken', accessToken, cookieOptions);
@@ -64,19 +63,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const logout = (redirect = true) => {
-    Cookies.remove('accessToken', { path: '/' });
-    Cookies.remove('refreshToken', { path: '/' });
-    Cookies.remove('role', { path: '/' });
-    localStorage.removeItem('user');
-    setAccessToken(null);
-    setRole(null);
-    setIsAuthenticated(false);
-    if (redirect) router.push('/login');
-  };
-
   return (
-    <AuthContext.Provider value={{ role, loading, isAuthenticated, accessToken, login, logout }}>
+    <AuthContext.Provider value={{ role, loading, isAuthenticated, accessToken, login }}>
       {children}
     </AuthContext.Provider>
   );

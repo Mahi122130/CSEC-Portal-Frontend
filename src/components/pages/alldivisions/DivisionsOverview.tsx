@@ -22,8 +22,13 @@ interface Group {
 }
 
 interface Division {
-  division: string;
-  divisionID: string;
+  _id: string;
+  name: string;
+  members: any[];
+  year_of_establishment: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
 }
 
 interface FrontendDivision {
@@ -38,13 +43,6 @@ interface FrontendDivision {
   }[];
 }
 
-const backendDivisions: Division[] = [
-  { division: "CPD", divisionID: "680a9a2b9e86262d7c618bd1" },
-  { division: "DEV", divisionID: "680a9a2c9e86262d7c618bd4" },
-  { division: "CYBER", divisionID: "680a9a2d9e86262d7c618bd7" },
-  { division: "DATA SCIENCE", divisionID: "680a9a2e9e86262d7c618bda" }
-];
-
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
   withCredentials: true,
@@ -57,7 +55,7 @@ export default function DivisionsOverview() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchDivisionGroups = async () => {
+    const fetchDivisionsAndGroups = async () => {
       setLoading(true);
       setError(null);
       
@@ -67,10 +65,21 @@ export default function DivisionsOverview() {
           throw new Error("Authentication required");
         }
 
+        // First fetch all divisions
+        const divisionsResponse = await api.get('/division', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'ngrok-skip-browser-warning': 'true'
+          }
+        });
+
+        const allDivisions: Division[] = divisionsResponse.data.data;
+
+        // Then fetch groups for each division
         const results = await Promise.all(
-          backendDivisions.map(async (division) => {
+          allDivisions.map(async (division) => {
             try {
-              const response = await api.get(`/group/${division.divisionID}`, {
+              const response = await api.get(`/group/${division._id}`, {
                 headers: {
                   Authorization: `Bearer ${token}`,
                   'ngrok-skip-browser-warning': 'true'
@@ -121,16 +130,16 @@ export default function DivisionsOverview() {
               );
               
               return {
-                id: division.divisionID,
-                name: division.division,
+                id: division._id,
+                name: division.name,
                 totalMembers: groupsWithMembers.reduce((sum, group) => sum + group.members, 0),
                 groups: groupsWithMembers
               };
             } catch (err) {
-              console.error(`Error processing ${division.division}`);
+              console.error(`Error processing ${division.name}`);
               return {
-                id: division.divisionID,
-                name: division.division,
+                id: division._id,
+                name: division.name,
                 totalMembers: 0,
                 groups: []
               };
@@ -152,7 +161,7 @@ export default function DivisionsOverview() {
       }
     };
   
-    fetchDivisionGroups();
+    fetchDivisionsAndGroups();
   }, []);
     
   const filteredDivisions = divisions.filter((division) =>
@@ -162,41 +171,22 @@ export default function DivisionsOverview() {
   if (loading) return <div className="p-4">Loading divisions...</div>;
   if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
-  // Get specific divisions
-  const cpdDivision = filteredDivisions.find(d => d.name === "CPD");
-  const devDivision = filteredDivisions.find(d => d.name === "DEV");
-  const cyberDivision = filteredDivisions.find(d => d.name === "CYBER");
-  const dataScienceDivision = filteredDivisions.find(d => d.name === "DATA SCIENCE");
+  const rows = [];
+  for (let i = 0; i < filteredDivisions.length; i += 2) {
+    rows.push(filteredDivisions.slice(i, i + 2));
+  }
 
   return (
     <div className="space-y-6 p-3 w-full">
-      {/* First row - CPD and DEV */}
-      <div className="flex gap-2">
-        {cpdDivision && (
-          <div className="flex-1">
-            <DivisionCardComponent division={cpdDivision} />
-          </div>
-        )}
-        {devDivision && (
-          <div className="flex-1">
-            <DivisionCardComponent division={devDivision} />
-          </div>
-        )}
-      </div>
-
-      {/* Second row - CYBER and DATA SCIENCE */}
-      <div className="flex gap-1">
-        {cyberDivision && (
-          <div className="flex-1">
-            <DivisionCardComponent division={cyberDivision} />
-          </div>
-        )}
-        {dataScienceDivision && (
-          <div className="flex-1">
-            <DivisionCardComponent division={dataScienceDivision} />
-          </div>
-        )}
-      </div>
+      {rows.map((row, rowIndex) => (
+        <div key={rowIndex} className="flex gap-2">
+          {row.map((division) => (
+            <div key={division.id} className="flex-1">
+              <DivisionCardComponent division={division} />
+            </div>
+          ))}
+        </div>
+      ))}
     </div>
   );
 }

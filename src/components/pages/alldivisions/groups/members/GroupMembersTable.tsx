@@ -22,7 +22,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import api from "@/lib/axios";
+import Cookies from "js-cookie";
 
 interface ApiMember {
   _id: string;
@@ -34,50 +36,72 @@ interface ApiMember {
     profile_picture?: string;
     university_id?: string;
     graduation_year?: number;
-    resources?: any[];
+    specialization?: string;
+    department?: string;
   };
   createdAt: string;
   updatedAt: string;
+  __v: number;
+}
+
+interface Division {
+  _id: string;
+  name: string;
+  members: string[];
+  coordinators: any[];
+  year_of_establishment: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
 }
 
 interface MembersTableProps {
   apiMembers: ApiMember[];
   className?: string;
+  onDeleteSuccess?: () => void;
 }
 
-export function MembersTable({ apiMembers, className }: MembersTableProps) {
+export function MembersTable({ apiMembers, className, onDeleteSuccess }: MembersTableProps) {
   const router = useRouter();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<ApiMember | null>(null);
+  const [divisions, setDivisions] = useState<Division[]>([]);
+  const [loadingDivisions, setLoadingDivisions] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Static division data
-  const divisions = [
-    {
-      _id: "1",
-      name: "Development",
-      members: [{ _id: "101", email: "dev1@example.com" }],
-      coordinators: [],
-      year_of_establishment: 2020,
-      createdAt: "",
-      updatedAt: "",
-      __v: 0
-    },
-    {
-      _id: "2",
-      name: "Design",
-      members: [{ _id: "102", email: "design1@example.com" }],
-      coordinators: [],
-      year_of_establishment: 2021,
-      createdAt: "",
-      updatedAt: "",
-      __v: 0
-    }
-  ];
+  useEffect(() => {
+    const fetchDivisions = async () => {
+      try {
+        const token = Cookies.get('accessToken');
+        if (!token) return;
+
+        const response = await api.get('/division', {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'ngrok-skip-browser-warning': 'true'
+          }
+        });
+
+        if (response.data && Array.isArray(response.data.data)) {
+          setDivisions(response.data.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch divisions:", error);
+      } finally {
+        setLoadingDivisions(false);
+      }
+    };
+
+    fetchDivisions();
+  }, []);
 
   const getMemberDivision = (memberId: string) => {
+    if (loadingDivisions) return "Loading...";
+    
     const division = divisions.find(div => 
-      div.members.some(m => m._id === memberId)
+      div.members.includes(memberId)
     );
+    
     return division ? division.name : "No Division";
   };
 
@@ -103,9 +127,9 @@ export function MembersTable({ apiMembers, className }: MembersTableProps) {
       else if (diff === 4) year = "1st";
     }
 
-    // Static status and attendance for demo
     const status = "OnCampus";
     const attendance = "Active";
+    const specialization = member.personal_info?.specialization || "Not specified";
 
     return {
       id,
@@ -116,6 +140,7 @@ export function MembersTable({ apiMembers, className }: MembersTableProps) {
       year,
       status,
       attendance,
+      specialization
     };
   };
 
@@ -126,46 +151,34 @@ export function MembersTable({ apiMembers, className }: MembersTableProps) {
   };
 
   const confirmDelete = async () => {
-    // Static delete action
-    console.log("Member deleted:", memberToDelete);
-    setDeleteDialogOpen(false);
+    if (!memberToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      const token = Cookies.get('accessToken');
+      if (!token) throw new Error('Authentication required');
+
+      await api.delete(`/user/${memberToDelete._id}`, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
+
+      if (onDeleteSuccess) {
+        onDeleteSuccess();
+      }
+    } catch (error) {
+      console.error("Failed to delete member:", error);
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+    }
   };
 
   if (!apiMembers || apiMembers.length === 0) {
-    return <div className="p-4 text-gray-500">No members found</div>;
+    return <div className="p-4 text-gray-500">No members found in this group</div>;
   }
-
-  // Static member data
-  const staticMembers = [
-    {
-      _id: "101",
-      email: "john.doe@example.com",
-      role: "member",
-      personal_info: {
-        first_name: "John",
-        last_name: "Doe",
-        profile_picture: "",
-        university_id: "UG123",
-        graduation_year: 2025
-      },
-      createdAt: "",
-      updatedAt: ""
-    },
-    {
-      _id: "102",
-      email: "jane.smith@example.com",
-      role: "member",
-      personal_info: {
-        first_name: "Jane",
-        last_name: "Smith",
-        profile_picture: "",
-        university_id: "UG124",
-        graduation_year: 2026
-      },
-      createdAt: "",
-      updatedAt: ""
-    }
-  ];
 
   return (
     <>
@@ -176,18 +189,18 @@ export function MembersTable({ apiMembers, className }: MembersTableProps) {
               <TableHead className="text-gray-500">Member Name</TableHead>
               <TableHead className="text-gray-500">Member ID</TableHead>
               <TableHead className="text-gray-500">Division</TableHead>
-              <TableHead className="text-gray-500">Attendance</TableHead>
+              <TableHead className="text-gray-500">Specialization</TableHead>
               <TableHead className="text-gray-500">Year</TableHead>
               <TableHead className="text-gray-500">Status</TableHead>
               <TableHead className="text-gray-500 text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {staticMembers.map((member) => {
+            {apiMembers.map((member) => {
               const displayData = getMemberDisplayData(member);
               return (
                 <TableRow
-                  key={displayData.id}
+                  key={member._id}
                   className="cursor-pointer hover:bg-gray-50"
                   onClick={() =>
                     router.push(
@@ -216,11 +229,8 @@ export function MembersTable({ apiMembers, className }: MembersTableProps) {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant="outline"
-                      className="text-green-500 bg-green-50"
-                    >
-                      {displayData.attendance}
+                    <Badge variant="outline">
+                      {displayData.specialization}
                     </Badge>
                   </TableCell>
                   <TableCell>{displayData.year}</TableCell>
@@ -267,6 +277,7 @@ export function MembersTable({ apiMembers, className }: MembersTableProps) {
             <Button 
               variant="outline" 
               onClick={() => setDeleteDialogOpen(false)}
+              disabled={isDeleting}
               className="rounded-[10px] p-2"
             >
               Cancel
@@ -274,9 +285,10 @@ export function MembersTable({ apiMembers, className }: MembersTableProps) {
             <Button 
               variant="destructive" 
               onClick={confirmDelete}
+              disabled={isDeleting}
               className="rounded-[10px] p-2"
             >
-              Delete
+              {isDeleting ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
