@@ -13,7 +13,7 @@ interface User {
 }
 
 interface Division {
-  id: string
+  _id: string
   name: string
 }
 
@@ -25,36 +25,59 @@ interface DivisionResponse {
 
 interface AddHeadModalProps {
   onClose: () => void
+  onHeadAdded: () => void
 }
 
-const DIVISIONS: Division[] = [
-  { id: "680a9a2b9e86262d7c618bd1", name: "CPD" },
-  { id: "680a9a2c9e86262d7c618bd4", name: "DEV" },
-  { id: "680a9a2d9e86262d7c618bd7", name: "CYBER" },
-  { id: "680a9a2e9e86262d7c618bda", name: "DATA SCIENCE" }
-]
-
-export default function AddHeadModal({ onClose }: AddHeadModalProps) {
+export default function AddHeadModal({ onClose, onHeadAdded }: AddHeadModalProps) {
   const [selectedRole, setSelectedRole] = useState("")
   const [selectedDivision, setSelectedDivision] = useState("")
   const [selectedUser, setSelectedUser] = useState("")
   const [divisionUsers, setDivisionUsers] = useState<User[]>([])
+  const [divisions, setDivisions] = useState<Division[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [loadingDivisions, setLoadingDivisions] = useState(false)
   const [token, setToken] = useState("")
   const { toast } = useToast()
 
   useEffect(() => {
-    // Get token from cookies
     const match = document.cookie.match(/accessToken=([^;]+)/)
     setToken(match?.[1] || "")
   }, [])
+
+  useEffect(() => {
+    const fetchDivisions = async () => {
+      if (!token) return
+      
+      setLoadingDivisions(true)
+      try {
+        const response = await api.get<{data: Division[]}>('/division', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'ngrok-skip-browser-warning': 'true'
+          }
+        })
+        setDivisions(response.data.data)
+      } catch (error) {
+        console.error("Error fetching divisions:", error)
+        toast({
+          title: "Error",
+          description: "Failed to fetch divisions",
+          variant: "destructive",
+          id: ""
+        })
+      } finally {
+        setLoadingDivisions(false)
+      }
+    }
+
+    fetchDivisions()
+  }, [token])
 
   const fetchDivisionMembers = async (divisionId: string) => {
     if (!token || !divisionId) return
     
     setIsLoading(true)
     try {
-      // Fetch division data including members with timeout
       const response = await api.get<DivisionResponse>(`/division/${divisionId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -67,7 +90,7 @@ export default function AddHeadModal({ onClose }: AddHeadModalProps) {
       } else {
         toast({
           title: "No Members Found",
-          description: `No members found in ${DIVISIONS.find(d => d.id === divisionId)?.name} division`,
+          description: `No members found in ${divisions.find(d => d._id === divisionId)?.name} division`,
           variant: "default",
           id: ""
         })
@@ -135,7 +158,12 @@ export default function AddHeadModal({ onClose }: AddHeadModalProps) {
         description: response.data?.message || "Head assigned successfully",
         id: ""
       })
-      onClose()
+
+      setTimeout(() => {
+        onClose()
+        onHeadAdded()
+      }, 3000)
+
     } catch (error: any) {
       console.error("Error assigning head:", error)
       toast({
@@ -169,13 +197,16 @@ export default function AddHeadModal({ onClose }: AddHeadModalProps) {
             <Select 
               onValueChange={setSelectedDivision} 
               value={selectedDivision}
+              disabled={loadingDivisions}
             >
               <SelectTrigger className="w-full text-gray-400">
-                <SelectValue placeholder="Select Division" />
+                <SelectValue placeholder={
+                  loadingDivisions ? "Loading divisions..." : "Select Division"
+                } />
               </SelectTrigger>
               <SelectContent>
-                {DIVISIONS.map((division) => (
-                  <SelectItem key={division.id} value={division.id}>
+                {divisions.map((division) => (
+                  <SelectItem key={division._id} value={division._id}>
                     {division.name}
                   </SelectItem>
                 ))}

@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
 import { X } from "lucide-react"
-import type { DivisionType } from "./resource-page"
 
 interface DivisionOption {
   id: string
@@ -16,8 +15,8 @@ interface DivisionOption {
 interface AddResourceModalProps {
   open: boolean
   onClose: () => void
-  onAddSuccess: (newResource: { name: string; link: string; division: DivisionType }) => Promise<void>
-  division: DivisionType
+  onAddSuccess: (newResource: { name: string; link: string; division: string }) => Promise<void>
+  division: string
   divisions: DivisionOption[]
 }
 
@@ -30,7 +29,7 @@ export default function AddResourceModal({
 }: AddResourceModalProps) {
   const [resourceName, setResourceName] = useState("")
   const [resourceLink, setResourceLink] = useState("")
-  const [division, setDivision] = useState<DivisionType>(initialDivision)
+  const [division, setDivision] = useState<string>(initialDivision)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
@@ -64,7 +63,6 @@ export default function AddResourceModal({
         division: division,
       })
     } catch (error) {
-      // Error handling is done in the parent component
     } finally {
       setIsLoading(false)
     }
@@ -94,7 +92,7 @@ export default function AddResourceModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Division</label>
                 <Select 
                   value={division} 
-                  onValueChange={(value: DivisionType) => setDivision(value)}
+                  onValueChange={(value: string) => setDivision(value)}
                   disabled={isLoading}
                 >
                   <SelectTrigger 

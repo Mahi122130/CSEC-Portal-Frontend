@@ -96,7 +96,7 @@ export default function RolesTable() {
     <div className="space-y-6">
       {roles.length > 0 ? (
         roles.map((role, index) => (
-          <div key={index} className="border border-gray-100 rounded-lg p-4">
+          <div key={index} className="border border-gray-200 rounded-lg p-4">
             <div className="flex justify-between items-center mb-2">
               <div className="flex items-center gap-2">
                 <span
@@ -107,14 +107,6 @@ export default function RolesTable() {
                   {role.status === "active" ? "Active" : "Inactive"}
                 </span>
                 <span className="font-medium">{formatRoleName(role.role)}</span>
-              </div>
-              <div className="flex gap-2">
-                <button className="text-gray-500 hover:text-blue-600">
-                  <Pencil className="w-4 h-4" />
-                </button>
-                <button className="text-gray-500 hover:text-red-600">
-                  <Trash2 className="w-4 h-4" />
-                </button>
               </div>
             </div>
             <div>

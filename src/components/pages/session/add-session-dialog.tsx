@@ -95,7 +95,7 @@ export default function AddSessionForm({ onCancel, onSuccess }: AddSessionFormPr
         date: formData.date,
         startTime: formData.startTime,
         endTime: formData.endTime,
-        status: formData.status
+        status: "planned"
       }, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -141,7 +141,7 @@ export default function AddSessionForm({ onCancel, onSuccess }: AddSessionFormPr
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="p-5 w-140 h-104 border-1 border-gray-300 rounded-[8px]">
+      <form onSubmit={handleSubmit} className="p-5 w-140 h-90 border-1 border-gray-300 rounded-[8px]">
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="title">Title</Label>
@@ -223,23 +223,6 @@ export default function AddSessionForm({ onCancel, onSuccess }: AddSessionFormPr
               required
             />
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Status</Label>
-          <Select
-            value={formData.status}
-            onValueChange={(value) => setFormData({...formData, status: value as any})}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="planned">Planned</SelectItem>
-              <SelectItem value="started">Started</SelectItem>
-              <SelectItem value="ended">Ended</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         <div className="space-y-2">

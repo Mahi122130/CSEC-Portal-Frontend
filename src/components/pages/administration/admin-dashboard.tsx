@@ -5,8 +5,7 @@ import HeadsTable from "./heads-table"
 import RolesTable from "./roles-table"
 import RulesTable from "./rules-table"
 import MembersPage from "./memebers"
-import AddHeadModal from "./add-head-model"
-import AddRoleModal from "./add-role-model"
+import AddHeadModal from "../administration/add-head-model"
 import { Button } from "@/components/ui/button"
 import { Filter, Crown, Settings, BookText, ArrowLeft } from "lucide-react"
 
@@ -14,12 +13,14 @@ export default function AdminDashboard() {
   const [activeView, setActiveView] = useState<"dashboard" | "members">("dashboard")
   const [activeTab, setActiveTab] = useState<"heads" | "rules" | "roles">("heads")
   const [showAddHeadModal, setShowAddHeadModal] = useState(false)
-  const [showAddRoleModal, setShowAddRoleModal] = useState(false)
 
-  const handleMembersClick = () => setActiveView("members")
   const handleBackToRules = () => {
     setActiveView("dashboard")
     setActiveTab("rules")
+  }
+
+  const handleHeadAdded = () => {
+    setShowAddHeadModal(false)
   }
 
   return (
@@ -69,15 +70,6 @@ export default function AdminDashboard() {
                   Add Head
                 </Button>
               )}
-              {activeTab === "roles" && (
-                <Button
-                  className="bg-[#003081] hover:bg-[#003081]/90 text-white rounded-lg px-4 py-2 text-sm flex items-center gap-2"
-                  onClick={() => setShowAddRoleModal(true)}
-                >
-                  <span className="text-lg">+</span>
-                  Add Role
-                </Button>
-              )}
               <Button
                 variant="outline"
                 className="border border-gray-300 text-gray-700 rounded-lg px-4 py-2 text-sm flex items-center gap-2"
@@ -108,8 +100,12 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {showAddHeadModal && <AddHeadModal onClose={() => setShowAddHeadModal(false)} />}
-      {showAddRoleModal && <AddRoleModal onClose={() => setShowAddRoleModal(false)} />}
+      {showAddHeadModal && (
+        <AddHeadModal 
+          onClose={() => setShowAddHeadModal(false)} 
+          onHeadAdded={handleHeadAdded}
+        />
+      )}
     </div>
   )
 }

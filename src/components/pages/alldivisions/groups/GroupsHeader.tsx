@@ -28,7 +28,7 @@ export function GroupsHeader({ className, onGroupAdded }: TableFilterProps) {
           />
         </div>
       </div>
-      {currentUserRole === "division_head" && (
+      {currentUserRole !== "member" && (
         <div className="flex gap-3">
           <div>
             <AddGroupDialog onGroupAdded={onGroupAdded} />
