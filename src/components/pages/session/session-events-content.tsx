@@ -20,34 +20,40 @@ export default function SessionAndEvent() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [sessions, setSessions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshKey, setRefreshKey] = useState(0) // Add refresh key state
+
+  const fetchSessions = async () => {
+    try {
+      const token = Cookies.get('accessToken')
+      if (!token) return
+
+      const response = await api.get('/session', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'ngrok-skip-browser-warning': 'true'
+        },
+        withCredentials: false
+      })
+
+      if (response.data) {
+        setSessions(response.data)
+      }
+    } catch (err) {
+      console.error("Failed to fetch sessions:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchSessions = async () => {
-      try {
-        const token = Cookies.get('accessToken')
-        if (!token) return
-
-        const response = await api.get('/session', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'ngrok-skip-browser-warning': 'true'
-          },
-          withCredentials: false
-        })
-
-        if (response.data) {
-          setSessions(response.data)
-        }
-      } catch (err) {
-        console.error("Failed to fetch sessions:", err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchSessions()
-  }, [])
+  }, [refreshKey]) // Add refreshKey to dependency array
 
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1) // Increment refreshKey to trigger refetch
+  }
+
+  const currentUserRole = Cookies.get("role");
   return (
     <div className="container mx-auto max-w-full p-4">
       <div className="flex justify-between items-center mb-4">
@@ -70,10 +76,12 @@ export default function SessionAndEvent() {
           </Button>
         </div>
         <div className="flex justify-center space-x-2">
+        {currentUserRole !== "member" && (
           <Button className="bg-[#003081] text-white rounded-[8px] hover:bg-[#002f8775] cursor-pointer h-10 px-2" onClick={() => setShowAddForm(true)}>
             <MdAddCircleOutline className="h-4 w-4" />
             Create {type === "event" ? "Event" : "Session"}
           </Button>
+          )}
           <Select
             value={type}
             onValueChange={(value) => {
@@ -93,9 +101,9 @@ export default function SessionAndEvent() {
       </div>
       {showAddForm ? (
         type === "event" ? (
-          <AddEventForm onCancel={() => setShowAddForm(false)} />
+          <AddEventForm onCancel={() => setShowAddForm(false)} onSuccess={handleRefresh} />
         ) : (
-          <AddSessionForm onCancel={() => setShowAddForm(false)} />
+          <AddSessionForm onCancel={() => setShowAddForm(false)} onSuccess={handleRefresh} />
         )
       ) : (
         <>
@@ -103,12 +111,12 @@ export default function SessionAndEvent() {
             view === "list" ? (
               <EventList />
             ) : (
-              <EventTable />
+              <EventTable onDeleteSuccess={handleRefresh} />
             )
           ) : view === "list" ? (
             <SessionList sessions={sessions} />
           ) : (
-            <SessionTable sessions={sessions} />
+            <SessionTable sessions={sessions} onDeleteSuccess={handleRefresh} />
           )}
         </>
       )}

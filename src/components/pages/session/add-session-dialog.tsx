@@ -9,7 +9,12 @@ import { Textarea } from "@/components/ui/text-area"
 import api from "@/lib/axios"
 import Cookies from "js-cookie"
 
-export default function AddSessionForm({ onCancel }: { onCancel: () => void }) {
+interface AddSessionFormProps {
+  onCancel: () => void
+  onSuccess?: () => void
+}
+
+export default function AddSessionForm({ onCancel, onSuccess }: AddSessionFormProps) {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -101,7 +106,8 @@ export default function AddSessionForm({ onCancel }: { onCancel: () => void }) {
       showToast("Session created successfully!", 'success')
       setTimeout(() => {
         onCancel()
-      }, 300)
+        if (onSuccess) onSuccess() 
+      }, 3000)
     } catch (err) {
       console.error("Failed to create session:", err)
       showToast("Failed to create session", 'error')
@@ -110,7 +116,7 @@ export default function AddSessionForm({ onCancel }: { onCancel: () => void }) {
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({show: true, message, type})
-    setTimeout(() => setToast({show: false, message: '', type: 'success'}), 300)
+    setTimeout(() => setToast({show: false, message: '', type: 'success'}), 3000)
   }
 
   const handleGroupToggle = (groupId: string) => {

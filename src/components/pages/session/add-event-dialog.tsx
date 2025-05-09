@@ -12,9 +12,10 @@ import { Textarea } from "@/components/ui/text-area"
 
 interface AddEventFormProps {
   onCancel: () => void
+  onSuccess?: () => void
 }
 
-export default function AddEventForm({ onCancel }: AddEventFormProps) {
+export default function AddEventForm({ onCancel, onSuccess }: AddEventFormProps) {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [visibility, setVisibility] = useState<"public" | "member">("public")
@@ -25,6 +26,7 @@ export default function AddEventForm({ onCancel }: AddEventFormProps) {
   const [loading, setLoading] = useState(false)
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState("")
+  const [toastType, setToastType] = useState<'success' | 'error'>('success')
   const [divisions, setDivisions] = useState<{_id: string, name: string}[]>([])
 
   // Fetch divisions from API
@@ -52,8 +54,9 @@ export default function AddEventForm({ onCancel }: AddEventFormProps) {
   const handleSubmit = async () => {
     if (!title || !date) {
       setToastMessage("Title and date are required")
+      setToastType('error')
       setShowToast(true)
-      setTimeout(() => setShowToast(false), 300)
+      setTimeout(() => setShowToast(false), 3000)
       return
     }
 
@@ -72,7 +75,7 @@ export default function AddEventForm({ onCancel }: AddEventFormProps) {
         status
       }
 
-      const response = await api.post('/event', eventData, {
+      await api.post('/event', eventData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'ngrok-skip-browser-warning': 'true'
@@ -81,16 +84,19 @@ export default function AddEventForm({ onCancel }: AddEventFormProps) {
       })
 
       setToastMessage("Event created successfully!")
+      setToastType('success')
       setShowToast(true)
       setTimeout(() => {
         setShowToast(false)
         onCancel()
-      }, 2000)
+        if (onSuccess) onSuccess() 
+      }, 3000)
     } catch (error) {
       console.error("Failed to create event:", error)
       setToastMessage("Failed to create event")
+      setToastType('error')
       setShowToast(true)
-      setTimeout(() => setShowToast(false), 300)
+      setTimeout(() => setShowToast(false), 3000)
     } finally {
       setLoading(false)
     }
