@@ -2,6 +2,7 @@
 import { Input } from "@/components/ui/input";
 import { LuSearch } from "react-icons/lu";
 import { AddDivisionDialog } from "@/components/pages/alldivisions/AddDivisionDialog";
+import Cookies from "js-cookie";
 
 interface DivisionHeaderProps {
   onSearch: (value: string) => void;
@@ -9,14 +10,15 @@ interface DivisionHeaderProps {
   onDivisionAdded: () => void;
 }
 
-export default function DivisionHeader({ 
-  onSearch, 
+export default function DivisionHeader({
+  onSearch,
   placeholder,
-  onDivisionAdded
+  onDivisionAdded,
 }: DivisionHeaderProps) {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onSearch(e.target.value);
   };
+  const currentUserRole = Cookies.get("role");
 
   return (
     <div className="flex items-center justify-between mx-4">
@@ -29,7 +31,9 @@ export default function DivisionHeader({
           onChange={handleSearchChange}
         />
       </div>
-      <AddDivisionDialog onDivisionAdded={onDivisionAdded} />
+      {currentUserRole === "president" && (
+        <AddDivisionDialog onDivisionAdded={onDivisionAdded} />
+      )}
     </div>
   );
 }

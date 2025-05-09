@@ -1,5 +1,6 @@
 "use client";
 import { Input } from "@/components/ui/input";
+import Cookies from "js-cookie";
 import { cn } from "@/lib/utils";
 import { LuSearch } from "react-icons/lu";
 import { AddGroupDialog } from "@/components/pages/alldivisions/groups/AddGroupDialog";
@@ -12,10 +13,9 @@ interface TableFilterProps {
   onGroupAdded?: () => void;
 }
 
-export function GroupsHeader({
-  className,
-  onGroupAdded
-}: TableFilterProps) {
+export function GroupsHeader({ className, onGroupAdded }: TableFilterProps) {
+  const currentUserRole = Cookies.get("role");
+
   return (
     <div className={cn("flex justify-between items-center p-5", className)}>
       <div className="relative flex justify-center gap-1 p-2 border-1 border-gray-300 rounded-[8px] h-12 items-center focus:outline-blue-600 focus:border-blue-600">
@@ -28,11 +28,13 @@ export function GroupsHeader({
           />
         </div>
       </div>
-      <div className="flex gap-3">
-        <div>
-          <AddGroupDialog onGroupAdded={onGroupAdded} />
+      {currentUserRole === "division_head" && (
+        <div className="flex gap-3">
+          <div>
+            <AddGroupDialog onGroupAdded={onGroupAdded} />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
