@@ -6,6 +6,7 @@ import RolesTable from "./roles-table"
 import RulesTable from "./rules-table"
 import MembersPage from "./memebers"
 import AddHeadModal from "../administration/add-head-model"
+import AddRoleModal from "./add-role-model"
 import { Button } from "@/components/ui/button"
 import { Filter, Crown, Settings, BookText, ArrowLeft } from "lucide-react"
 
@@ -13,6 +14,8 @@ export default function AdminDashboard() {
   const [activeView, setActiveView] = useState<"dashboard" | "members">("dashboard")
   const [activeTab, setActiveTab] = useState<"heads" | "rules" | "roles">("heads")
   const [showAddHeadModal, setShowAddHeadModal] = useState(false)
+  const [showAddRoleModal, setShowAddRoleModal] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const handleBackToRules = () => {
     setActiveView("dashboard")
@@ -20,6 +23,7 @@ export default function AdminDashboard() {
   }
 
   const handleHeadAdded = () => {
+    setRefreshKey(prev => prev + 1) // This will force HeadsTable to refresh
     setShowAddHeadModal(false)
   }
 
@@ -81,7 +85,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="p-4">
-            {activeTab === "heads" && <HeadsTable />}
+            {activeTab === "heads" && <HeadsTable key={refreshKey} />}
             {activeTab === "roles" && <RolesTable />}
             {activeTab === "rules" && <RulesTable />}
           </div>

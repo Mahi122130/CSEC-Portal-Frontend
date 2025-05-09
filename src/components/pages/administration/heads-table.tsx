@@ -286,13 +286,13 @@ export default function HeadsTable() {
             <div className="flex justify-end gap-3 pt-4">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="h-10 px-6 rounded-[8px] border border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+                className="h-10 px-6 rounded-[8px] border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
-                className="h-10 px-6 rounded-[8px] bg-red-600 hover:bg-red-700 text-white"
+                className="h-10 px-6 rounded-[8px] bg-red-600 hover:bg-red-700 text-white cursor-pointer"
               >
                 Confirm
               </button>
