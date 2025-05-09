@@ -91,7 +91,11 @@ export default function GroupOverview({ linkText = "View All" }: { linkText?: st
     fetchGroupsAndMembers();
   }, [divisionId, groupId]);
 
-  if (loading) return <div className="p-4">Loading groups...</div>;
+  if (loading) return (
+    <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#003087]"></div>
+    </div>
+  );
   if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
   const filteredGroups = groups.filter((group) =>

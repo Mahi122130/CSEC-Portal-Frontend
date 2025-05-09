@@ -57,7 +57,6 @@ export default function MultiStepForm() {
     }>
   >([]);
 
-  // Toast implementation
   const showToast = (
     title: string,
     description: string,
@@ -80,7 +79,6 @@ export default function MultiStepForm() {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
-  // Toast UI component
   const Toast = ({
     title,
     description,
@@ -213,6 +211,7 @@ export default function MultiStepForm() {
   const refreshPage = () => {
     window.location.reload();
   };
+
   const handleSubmitRequiredOptional = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -242,7 +241,6 @@ export default function MultiStepForm() {
       formPayload.append("instagram_handle", formData.instagram_handle);
       formPayload.append("bio", formData.bio);
 
-      // Handle optional dates only if they exist
       if (formData.optional_birth_date) {
         formPayload.append("optional_birth_date", formData.optional_birth_date);
       }
@@ -250,7 +248,6 @@ export default function MultiStepForm() {
         formPayload.append("joining_date", formData.joining_date);
       }
 
-      // Handle file uploads
       if (formData.profile_picture) {
         formPayload.append("profile_picture", formData.profile_picture);
       }
@@ -275,7 +272,6 @@ export default function MultiStepForm() {
       const updatedUser = response.data.user;
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      // Update form data with new values from server
       setInitialFormData({
         ...initialFormData,
         ...updatedUser.personal_info,
@@ -312,31 +308,55 @@ export default function MultiStepForm() {
       const token = Cookies.get("accessToken");
       if (!token) throw new Error("Authentication required");
 
+      // Filter out empty resources
+      const validResources = formData.resources.filter(
+        (resource) => resource.name.trim() && resource.link.trim()
+      );
+
+      if (validResources.length === 0) {
+        throw new Error("Please add at least one valid resource");
+      }
+
       const response = await api.post(
         `/resource`,
         {
-          resources: formData.resources.filter((r) => r.name && r.link),
+          userId,
+          resources: validResources,
         },
         {
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
             "ngrok-skip-browser-warning": "true",
           },
         }
       );
 
-      showToast("Success", "Resources updated successfully");
+      showToast("Success", "Resources saved successfully");
 
-      const updatedUser = response.data.user;
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      // Update local storage with new resources
+      const userString = localStorage.getItem("user");
+      if (userString) {
+        const user = JSON.parse(userString);
+        user.personal_info = user.personal_info || {};
+        user.personal_info.resources = validResources;
+        localStorage.setItem("user", JSON.stringify(user));
+      }
 
-      setTimeout(() => {
-        refreshPage();
-      }, 2000); 
+      // Update form data
+      setInitialFormData((prev) => ({
+        ...prev,
+        resources: validResources,
+      }));
+      setFormData((prev) => ({
+        ...prev,
+        resources: validResources,
+      }));
+
     } catch (error: any) {
       showToast(
         "Error",
-        error.response?.data?.message || "Failed to update resources",
+        error.message || "Failed to save resources",
         "destructive"
       );
     } finally {
@@ -427,6 +447,7 @@ export default function MultiStepForm() {
               handleChange={handleChange}
               handleResourceChange={handleResourceChange}
               addResource={addResource}
+              onSave={() => {}} // This will be handled by the form submit
               onCancel={resetForm}
             />
           </form>

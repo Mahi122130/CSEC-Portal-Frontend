@@ -65,15 +65,15 @@ export default function AddEventForm({ onCancel, onSuccess }: AddEventFormProps)
       const token = Cookies.get('accessToken')
       if (!token) throw new Error("No authentication token found")
 
-      const eventData = {
-        title,
-        description,
-        date, 
-        time,
-        division,
-        visibility,
-        status
-      }
+        const eventData = {
+          title,
+          description,
+          date: new Date(date).toISOString(), 
+          time: time || undefined,
+          division: division || undefined, 
+          visibility,
+          status
+        }
 
       await api.post('/event', eventData, {
         headers: {

@@ -20,7 +20,7 @@ export default function SessionAndEvent() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [sessions, setSessions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [refreshKey, setRefreshKey] = useState(0) // Add refresh key state
+  const [refreshKey, setRefreshKey] = useState(0) 
 
   const fetchSessions = async () => {
     try {
@@ -47,10 +47,10 @@ export default function SessionAndEvent() {
 
   useEffect(() => {
     fetchSessions()
-  }, [refreshKey]) // Add refreshKey to dependency array
+  }, [refreshKey]) 
 
   const handleRefresh = () => {
-    setRefreshKey(prev => prev + 1) // Increment refreshKey to trigger refetch
+    setRefreshKey(prev => prev + 1) 
   }
 
   const currentUserRole = Cookies.get("role");

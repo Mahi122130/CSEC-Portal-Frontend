@@ -1,7 +1,8 @@
-"use client"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface ResourcesProps {
   formData: {
@@ -52,7 +53,7 @@ export default function Resources({
               <Button 
                 type="button" 
                 onClick={addResource} 
-                className="flex items-center gap-2 h-10 px-4 py-2 rounded-lg bg-[#003081] hover:bg-[#003081]/90 text-white mb-[2px]"
+                className="flex items-center gap-2 h-10 px-4 py-2 rounded-lg bg-[#003087] hover:bg-[#003081]/90 text-white mb-[2px]"
               >
                 Add
               </Button>
@@ -72,7 +73,7 @@ export default function Resources({
           <Button 
             type="button" 
             onClick={onSave}
-            className="h-10 px-4 py-2 rounded-lg bg-[#003081] hover:bg-[#003081]/90 text-white"
+            className="h-10 px-4 py-2 rounded-lg bg-[#003087] hover:bg-[#003081]/90 text-white"
           >
             Save
           </Button>

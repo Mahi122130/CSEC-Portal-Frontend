@@ -18,21 +18,21 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className={`flex flex-col h-screen ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50'}`}>
+    <div className={`flex flex-col h-screen ${theme === 'dark' ? 'bg-gray-900 text-white' : ''}`}>
       {/* Settings content */}
       <div className="p-4 mx-3 flex-1 overflow-auto">
         <div className="w-full">
           {/* Appearance Setting with Theme button */}
-          <div className={`py-4 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'} flex justify-between items-center`}>
+          <div className={`py-4 border-b ${theme === 'dark' ? 'border-gray-700' : ''} flex justify-between items-center`}>
             <div>
               <h3 className="font-medium mb-1">Appearance</h3>
-              <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : ''}`}>
                 Customise how your theme looks on your device
               </p>
             </div>
             <div className="ml-4">
               <button 
-                className={`${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'} text-xs px-3 py-1 rounded flex items-center`}
+                className={`${theme === 'dark' ? 'bg-gray-700 text-white' : ''} text-xs px-3 py-1 rounded flex items-center`}
                 onClick={toggleTheme}
               >
                 {theme === 'light' ? 'Light' : 'Dark'}
@@ -42,10 +42,10 @@ export default function SettingsPage() {
           </div>
 
           {/* Calendar Setting */}
-          <div className={`py-4 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'} flex justify-between items-center`}>
+          <div className={`py-4 border-b ${theme === 'dark' ? 'border-gray-700' : ''} flex justify-between items-center`}>
             <div>
               <h3 className="font-medium mb-1">Automatically Add Events to Calendar</h3>
-              <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : ''}`}>
                 Save time by auto-adding events to your calendar, or manually enter them for more control.
               </p>
             </div>

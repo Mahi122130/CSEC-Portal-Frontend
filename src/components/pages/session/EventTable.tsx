@@ -144,7 +144,11 @@ export default function EventTable({ onDeleteSuccess }: EventTableProps) {
   };
 
   if (loading) {
-    return <div>Loading events...</div>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#003087]"></div>
+      </div>
+    );
   }
 
   return (
@@ -193,7 +197,7 @@ export default function EventTable({ onDeleteSuccess }: EventTableProps) {
       )}
 
       <div className="border rounded-md">
-        <Table>
+        <Table >
           <TableHeader>
             <TableRow>
               <TableHead>Date</TableHead>
@@ -258,7 +262,7 @@ export default function EventTable({ onDeleteSuccess }: EventTableProps) {
           </TableBody>
         </Table>
         <div className="flex items-center justify-between px-4 py-2 border-t">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center">
             <span className="text-sm text-gray-500">Showing</span>
             <Select
               value={itemsPerPage.toString()}
