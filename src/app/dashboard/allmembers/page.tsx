@@ -8,6 +8,12 @@ import { TablePagination } from "@/components/common/TablePagination";
 import api from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 
+interface FilterOptions {
+  divisions: string[];
+  years: string[];
+  statuses: string[];
+}
+
 export default function MembersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [canAddMembers, setCanAddMembers] = useState(false);
@@ -17,12 +23,19 @@ export default function MembersPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<FilterOptions>({
+    divisions: [],
+    years: [],
+    statuses: [],
+  });
+  const [divisions, setDivisions] = useState<{ name: string }[]>([]);
   const itemsPerPage = 6;
 
   useEffect(() => {
     const role = Cookies.get("role");
     setCanAddMembers(!!role && role !== "member");
     fetchAllMembers();
+    fetchDivisions();
   }, [refreshKey]);
 
   const fetchAllMembers = async () => {
@@ -36,7 +49,6 @@ export default function MembersPage() {
         return;
       }
 
-      // First get the total count
       const countResponse = await api.get("/user", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -54,7 +66,6 @@ export default function MembersPage() {
         return;
       }
 
-      // Calculate how many requests we need to make
       const totalPages = Math.ceil(totalCount / 10);
       const requests = [];
 
@@ -70,9 +81,8 @@ export default function MembersPage() {
         );
       }
 
-      // Fetch all pages in parallel
       const responses = await Promise.all(requests);
-      const allMembersData = responses.flatMap(response => 
+      const allMembersData = responses.flatMap((response) =>
         Array.isArray(response.data?.data) ? response.data.data : []
       );
 
@@ -84,6 +94,27 @@ export default function MembersPage() {
     }
   };
 
+  const fetchDivisions = async () => {
+    try {
+      const token = Cookies.get("accessToken");
+      if (!token) return;
+  
+      const response = await api.get("/division", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+        withCredentials: false,
+      });
+  
+      if (response.data && Array.isArray(response.data.data)) {
+        setDivisions(response.data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch divisions:", error);
+    }
+  };
+
   const getMemberDisplayName = (member: any) => {
     return member.personal_info?.first_name || member.personal_info?.last_name
       ? `${member.personal_info.first_name || ""} ${
@@ -92,14 +123,87 @@ export default function MembersPage() {
       : member.email.split("@")[0];
   };
 
-  const filteredMembers = useMemo(() => {
-    if (!searchQuery) return allMembers;
-    const query = searchQuery.toLowerCase();
-    return allMembers.filter((member) => {
-      const displayName = getMemberDisplayName(member).toLowerCase();
-      return displayName.includes(query);
+  const getMemberYear = (member: any) => {
+    if (!member.personal_info?.graduation_year) return "N/A";
+    const currentYear = new Date().getFullYear();
+    const diff = member.personal_info.graduation_year - currentYear;
+    if (diff === 0) return "5th";
+    if (diff === 1) return "4th";
+    if (diff === 2) return "3rd";
+    if (diff === 3) return "2nd";
+    if (diff === 4) return "1st";
+    return "N/A";
+  };
+
+  const getMemberStatus = (member: any) => {
+    const lastUpdated = new Date(member.updatedAt);
+    const currentDate = new Date();
+    const monthsSinceUpdate =
+      (currentDate.getFullYear() - lastUpdated.getFullYear()) * 12 +
+      (currentDate.getMonth() - lastUpdated.getMonth());
+
+    return monthsSinceUpdate < 6 ? "OnCampus" : "OffCampus";
+  };
+
+  const getMemberAttendance = (member: any) => {
+    const lastUpdated = new Date(member.updatedAt);
+    const currentDate = new Date();
+    const monthsSinceUpdate =
+      (currentDate.getFullYear() - lastUpdated.getFullYear()) * 12 +
+      (currentDate.getMonth() - lastUpdated.getMonth());
+
+    return monthsSinceUpdate < 3
+      ? "Active"
+      : monthsSinceUpdate < 6
+      ? "Needs Attention"
+      : "Inactive";
+  };
+
+  const getMemberDivision = (member: any, allDivisions: any[]) => {
+    if (!allDivisions || !Array.isArray(allDivisions)) return "No Division";
+    
+    const division = allDivisions.find((div) => {
+      if (!div.members || !Array.isArray(div.members)) return false;
+      return div.members.some((m: any) => m._id === member._id);
     });
-  }, [allMembers, searchQuery]);
+    
+    return division ? division.name : "No Division";
+  };
+
+  const filteredMembers = useMemo(() => {
+    let result = [...allMembers];
+    
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter((member) => {
+        const displayName = getMemberDisplayName(member).toLowerCase();
+        return displayName.includes(query);
+      });
+    }
+
+    // Apply other filters
+    if (filters.divisions.length > 0 || filters.years.length > 0 || filters.statuses.length > 0) {
+      result = result.filter((member) => {
+        const memberDivision = getMemberDivision(member, divisions);
+        const memberYear = getMemberYear(member);
+        const memberAttendance = getMemberAttendance(member);
+
+        const divisionMatch = filters.divisions.length === 0 || 
+          filters.divisions.includes(memberDivision);
+        
+        const yearMatch = filters.years.length === 0 || 
+          filters.years.includes(memberYear);
+        
+        const statusMatch = filters.statuses.length === 0 || 
+          filters.statuses.includes(memberAttendance);
+
+        return divisionMatch && yearMatch && statusMatch;
+      });
+    }
+
+    return result;
+  }, [allMembers, searchQuery, filters, divisions]);
 
   const paginatedMembers = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -132,6 +236,11 @@ export default function MembersPage() {
     }
   };
 
+  const handleFilter = (newFilters: FilterOptions) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -160,10 +269,11 @@ export default function MembersPage() {
         <main className="flex-1 flex flex-col gap-6">
           <TableFilter
             onSearch={handleSearch}
-            onFilter={() => console.log("Filter clicked")}
+            onFilter={handleFilter}
             placeholder="Search members..."
             addMembersButton={canAddMembers}
             onMemberAdded={handleMemberAdded}
+            divisions={divisions.map(div => div.name)}
           />
           <div>
             <MembersTable

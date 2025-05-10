@@ -307,16 +307,6 @@ export function AddMemberDialog({ onMemberAdded }: AddMemberDialogProps) {
               </Button>
             </div>
 
-            <div className="space-y-2">
-              <Input
-                type="password"
-                placeholder="Enter Generated Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="flex w-70 h-11 px-3 py-6 border-1 border-gray-300 rounded-[8px]"
-              />
-            </div>
-
             <div className="flex justify-center items-center gap-3">
               <Button
                 variant="outline"
