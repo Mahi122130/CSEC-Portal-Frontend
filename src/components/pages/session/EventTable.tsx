@@ -180,14 +180,14 @@ export default function EventTable({ onDeleteSuccess }: EventTableProps) {
                   setShowConfirm(false);
                   setItemToDelete(null);
                 }}
-                className="p-2 rounded-[10px]"
+                className="p-2 rounded-[10px] cursor-pointer"
               >
                 Cancel
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleDelete}
-                className="p-2 rounded-[10px]"
+                className="p-2 rounded-[10px] cursor-pointer"
               >
                 Delete
               </Button>
@@ -202,7 +202,6 @@ export default function EventTable({ onDeleteSuccess }: EventTableProps) {
             <TableRow>
               <TableHead>Date</TableHead>
               <TableHead>Event Title</TableHead>
-              <TableHead>Event Type</TableHead>
               <TableHead>Visibility</TableHead>
               <TableHead>Status</TableHead>
               {currentUserRole !== "member" && <TableHead>Actions</TableHead>}
@@ -215,7 +214,6 @@ export default function EventTable({ onDeleteSuccess }: EventTableProps) {
                   {formatDate(event.date)}
                 </TableCell>
                 <TableCell>{event.title}</TableCell>
-                <TableCell>{getDivisionName(event.division)}</TableCell>
                 <TableCell>
                   <Badge
                     className={`${

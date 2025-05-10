@@ -70,9 +70,8 @@ export default function AddEventForm({ onCancel, onSuccess }: AddEventFormProps)
           description,
           date: new Date(date).toISOString(), 
           time: time || undefined,
-          division: division || undefined, 
           visibility,
-          status
+          status: "planned"
         }
 
       await api.post('/event', eventData, {
@@ -108,7 +107,9 @@ export default function AddEventForm({ onCancel, onSuccess }: AddEventFormProps)
 
       {/* Toast Notification */}
       {showToast && (
-        <div className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg">
+        <div className={`absolute top-4 right-4 text-white px-4 py-2 rounded-md shadow-lg ${
+          toastType === 'success' ? 'bg-green-500' : 'bg-red-500'
+        }`}>
           {toastMessage}
         </div>
       )}
@@ -135,22 +136,6 @@ export default function AddEventForm({ onCancel, onSuccess }: AddEventFormProps)
               onChange={(e) => setDescription(e.target.value)}
               className="w-70"
             />
-          </div>
-
-          <div>
-            <Label htmlFor="select-division">Select Division</Label>
-            <Select onValueChange={setDivision}>
-              <SelectTrigger id="select-division">
-                <SelectValue placeholder="Select Division" />
-              </SelectTrigger>
-              <SelectContent>
-                {divisions.map((div) => (
-                  <SelectItem key={div._id} value={div._id}>
-                    {div.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -195,19 +180,6 @@ export default function AddEventForm({ onCancel, onSuccess }: AddEventFormProps)
             />
           </div>
 
-          <div>
-            <Label className="block mb-2">Status</Label>
-            <Select onValueChange={(value) => setStatus(value as "planned" | "started" | "ended")}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="planned">Planned</SelectItem>
-                <SelectItem value="started">Started</SelectItem>
-                <SelectItem value="ended">Ended</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </div>
       </div>
 
