@@ -225,7 +225,7 @@ export function MembersTable({
               <TableHead className="text-gray-500">Attendance</TableHead>
               <TableHead className="text-gray-500">Year</TableHead>
               <TableHead className="text-gray-500">Status</TableHead>
-              {currentUserRole !== 'member' && (
+              {currentUserRole === 'president' && (
                 <TableHead className="text-gray-500 text-center">Actions</TableHead>
               )}
             </TableRow>
@@ -302,7 +302,7 @@ export function MembersTable({
                     </Badge>
                   </TableCell>
 
-                  {currentUserRole !== 'member' && (
+                  {currentUserRole === 'president' && (
                     <TableCell>
                       <div className="flex justify-center">
                         <Button
