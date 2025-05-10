@@ -303,37 +303,43 @@ export default function MultiStepForm() {
   const handleSubmitResources = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
+  
     try {
       const token = Cookies.get("accessToken");
       if (!token) throw new Error("Authentication required");
-
+  
       // Filter out empty resources
       const validResources = formData.resources.filter(
         (resource) => resource.name.trim() && resource.link.trim()
       );
-
+  
       if (validResources.length === 0) {
         throw new Error("Please add at least one valid resource");
       }
-
-      const response = await api.post(
-        `/resource`,
-        {
-          userId,
-          resources: validResources,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
+  
+      // Submit each resource individually
+      const promises = validResources.map(resource => {
+        return api.post(
+          `/resource`,
+          {
+            name: resource.name,
+            link: resource.link
           },
-        }
-      );
-
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "true",
+            },
+          }
+        );
+      });
+  
+      // Wait for all requests to complete
+      const responses = await Promise.all(promises);
+  
       showToast("Success", "Resources saved successfully");
-
+  
       // Update local storage with new resources
       const userString = localStorage.getItem("user");
       if (userString) {
@@ -342,7 +348,7 @@ export default function MultiStepForm() {
         user.personal_info.resources = validResources;
         localStorage.setItem("user", JSON.stringify(user));
       }
-
+  
       // Update form data
       setInitialFormData((prev) => ({
         ...prev,
@@ -352,7 +358,7 @@ export default function MultiStepForm() {
         ...prev,
         resources: validResources,
       }));
-
+  
     } catch (error: any) {
       showToast(
         "Error",
@@ -447,7 +453,7 @@ export default function MultiStepForm() {
               handleChange={handleChange}
               handleResourceChange={handleResourceChange}
               addResource={addResource}
-              onSave={() => {}} // This will be handled by the form submit
+              onSave={() => {}} 
               onCancel={resetForm}
             />
           </form>

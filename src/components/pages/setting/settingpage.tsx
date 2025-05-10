@@ -26,7 +26,7 @@ export default function SettingsPage() {
           <div className={`py-4 border-b ${theme === 'dark' ? 'border-gray-700' : ''} flex justify-between items-center`}>
             <div>
               <h3 className="font-medium mb-1">Appearance</h3>
-              <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : ''}`}>
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>
                 Customise how your theme looks on your device
               </p>
             </div>
@@ -44,9 +44,9 @@ export default function SettingsPage() {
           {/* Calendar Setting */}
           <div className={`py-4 border-b ${theme === 'dark' ? 'border-gray-700' : ''} flex justify-between items-center`}>
             <div>
-              <h3 className="font-medium mb-1">Automatically Add Events to Calendar</h3>
-              <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : ''}`}>
-                Save time by auto-adding events to your calendar, or manually enter them for more control.
+              <h3 className="font-medium mb-1">Automatically Add Sessions to Calendar</h3>
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>
+                Save time by auto-adding sessions to your calendar, or manually enter them for more control.
               </p>
             </div>
             <div className="relative inline-block w-10 mr-2 align-middle select-none">
@@ -68,7 +68,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Phone Privacy Setting */}
-          <div className={`py-4 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'} flex justify-between items-center`}>
+          <div className={`py-4 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'} flex justify-between items-center`}>
             <div>
               <h3 className="font-medium mb-1">Make your Phone Public</h3>
               <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>

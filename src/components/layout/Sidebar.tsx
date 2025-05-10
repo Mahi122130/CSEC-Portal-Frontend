@@ -87,7 +87,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
-    const role = Cookies.get('role');
+    const role = Cookies.get("role");
     setUserRole(role || null);
   }, []);
 
@@ -98,18 +98,31 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return pathname.startsWith(itemUrl);
   };
 
-  const filteredNavigationItems = navigationItems.filter(item => 
-    item.title !== "Administration" || userRole === "president"
-  );
-  
+  const filteredNavigationItems = navigationItems.filter((item) => {
+    if (item.title === "Administration" && userRole !== "president") {
+      return false;
+    }
+    if (item.title === "Attendance" && userRole === "member") {
+      return false;
+    }
+    return true;
+  });
+
   const route = useRouter();
-  
+
   return (
     <div className="flex h-full p-2 ml-1 mt-1">
-      <Sidebar {...props} collapsible="offcanvas" className="flex justify-center">
+      <Sidebar
+        {...props}
+        collapsible="offcanvas"
+        className="flex justify-center"
+      >
         <div className="flex flex-col gap-5 bg-[#34495E0D] rounded-2xl w-58 h-auto">
           <SidebarHeader className="pt-5">
-            <div className="flex items-end justify-center gap-2 cursor-pointer" onClick={() => route.push("/dashboard")}>
+            <div
+              className="flex items-end justify-center gap-2 cursor-pointer"
+              onClick={() => route.push("/dashboard")}
+            >
               <Img src={Logoipsum} alt="Logo icon and name" />
             </div>
           </SidebarHeader>

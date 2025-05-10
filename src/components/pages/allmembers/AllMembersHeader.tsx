@@ -162,7 +162,7 @@ export function ProfileHeader() {
               {lastSeen === "online" ? (
                 <p className="flex items-end text-sm text-green-400 font-medium">online</p>
               ) : (
-                <p className="flex items-end text-sm opacity-90">last seen {lastSeen || "recently"}</p>
+                <p className="flex items-end text-sm opacity-90">last seen {lastSeen || "long time ago"}</p>
               )}
             </div>
           </div>

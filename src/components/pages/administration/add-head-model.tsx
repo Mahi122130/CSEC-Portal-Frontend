@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import api from "@/lib/axios";
-import { useToast } from "@/components/ui/use-toast";
 
 interface User {
   _id: string;
@@ -49,7 +48,6 @@ export default function AddHeadModal({
   const [isLoading, setIsLoading] = useState(false);
   const [loadingDivisions, setLoadingDivisions] = useState(false);
   const [token, setToken] = useState("");
-  const { toast } = useToast();
 
   useEffect(() => {
     const match = document.cookie.match(/accessToken=([^;]+)/);
@@ -71,19 +69,13 @@ export default function AddHeadModal({
         setDivisions(response.data.data);
       } catch (error) {
         console.error("Error fetching divisions:", error);
-        toast({
-          id: "division-error",
-          title: "Error",
-          description: "Failed to fetch divisions",
-          variant: "destructive",
-        });
       } finally {
         setLoadingDivisions(false);
       }
     };
 
     fetchDivisions();
-  }, [token, toast]);
+  }, [token]);
 
   const fetchDivisionMembers = async (divisionId: string) => {
     if (!token || !divisionId) return;
@@ -103,14 +95,6 @@ export default function AddHeadModal({
       if (response.data?.members) {
         setDivisionUsers(response.data.members);
       } else {
-        toast({
-          id: "no-members",
-          title: "No Members Found",
-          description: `No members found in ${
-            divisions.find((d) => d._id === divisionId)?.name
-          } division`,
-          variant: "default",
-        });
         setDivisionUsers([]);
       }
     } catch (error: any) {
@@ -124,13 +108,6 @@ export default function AddHeadModal({
       } else if (error.request) {
         errorMessage = "Network error. Please check your connection.";
       }
-
-      toast({
-        id: "division-fetch-error",
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
       setDivisionUsers([]);
     } finally {
       setIsLoading(false);
@@ -157,12 +134,6 @@ export default function AddHeadModal({
 
   const handleAssign = async () => {
     if (!selectedUser || !selectedDivision || !selectedRole) {
-      toast({
-        id: "validation-error",
-        title: "Error",
-        description: "Please fill all fields",
-        variant: "destructive",
-      });
       return;
     }
 
@@ -183,22 +154,10 @@ export default function AddHeadModal({
         }
       );
 
-      toast({
-        id: "success",
-        title: "Success",
-        description: response.data?.message || "Head assigned successfully",
-      });
-
       onHeadAdded();
       onClose();
     } catch (error: any) {
       console.error("Error assigning head:", error);
-      toast({
-        id: "assign-error",
-        title: "Error",
-        description: error.response?.data?.message || "Failed to assign head",
-        variant: "destructive",
-      });
     }
   };
 

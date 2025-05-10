@@ -14,7 +14,6 @@ export default function AdminDashboard() {
   const [activeView, setActiveView] = useState<"dashboard" | "members">("dashboard")
   const [activeTab, setActiveTab] = useState<"heads" | "rules" | "roles">("heads")
   const [showAddHeadModal, setShowAddHeadModal] = useState(false)
-  const [showAddRoleModal, setShowAddRoleModal] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
 
   const handleBackToRules = () => {
@@ -23,7 +22,7 @@ export default function AdminDashboard() {
   }
 
   const handleHeadAdded = () => {
-    setRefreshKey(prev => prev + 1) // This will force HeadsTable to refresh
+    setRefreshKey(prev => prev + 1) 
     setShowAddHeadModal(false)
   }
 

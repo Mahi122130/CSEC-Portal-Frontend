@@ -129,7 +129,7 @@ export function MembersTable({
         : member.email.split("@")[0];
 
     const avatar = member.personal_info?.profile_picture;
-    const id = member.personal_info?.university_id || member._id;
+    const id = member.personal_info?.university_id || "N/A";
 
     let year = "N/A";
     if (member.personal_info?.graduation_year) {

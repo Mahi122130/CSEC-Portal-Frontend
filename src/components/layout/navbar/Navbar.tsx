@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { LuSearch } from "react-icons/lu";
 import { GoBell } from "react-icons/go";
 import DropDownMenu from "./DropDownMenu";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaAngleRight } from "react-icons/fa6";
 import api from "@/lib/axios";
@@ -21,6 +21,7 @@ export default function Navbar({ time }: NavbarProps) {
   const [memberDisplayName, setMemberDisplayName] = useState<string | null>(null);
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
     const userString = localStorage.getItem("user");
@@ -77,6 +78,18 @@ export default function Navbar({ time }: NavbarProps) {
     return "evening";
   };
 
+  const handleBreadcrumbClick = (path: string, isRoot: boolean = false) => {
+    if (isRoot) {
+      // Navigate to the root path of the current section
+      const rootPath = path.split('/').slice(0, 3).join('/');
+      router.push(rootPath);
+    } else {
+      // For non-root breadcrumbs, go back to the parent path
+      const parentPath = path.split('/').slice(0, -1).join('/') || '/';
+      router.push(parentPath);
+    }
+  };
+
   const renderBreadcrumbs = (
     baseTitle: string,
     baseSubtitle: string,
@@ -88,7 +101,12 @@ export default function Navbar({ time }: NavbarProps) {
       return (
         <>
           <h1 className="text-lg font-semibold">{baseTitle}</h1>
-          <h3 className="text-sm text-gray-600">{baseSubtitle}</h3>
+          <h3 
+            className="text-sm text-gray-600 hover:text-gray-800 hover:cursor-pointer" 
+            onClick={() => handleBreadcrumbClick(pathname, true)}
+          >
+            {baseSubtitle}
+          </h3>
         </>
       );
     }
@@ -97,15 +115,26 @@ export default function Navbar({ time }: NavbarProps) {
       <>
         <h1 className="text-lg font-semibold">{baseTitle}</h1>
         <div className="flex gap-2 items-center">
-          <h3 className="text-sm text-gray-600">{baseSubtitle}</h3>
-          {pathSegments.map((segment, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <FaAngleRight color="gray" size={13} className="mt-1" />
-              <h3 className="text-sm text-gray-600 capitalize">
-                {segment.replace(/-/g, " ")}
-              </h3>
-            </div>
-          ))}
+          <h3 
+            className="text-sm text-gray-600 hover:text-gray-800 hover:cursor-pointer" 
+            onClick={() => handleBreadcrumbClick(pathname, true)}
+          >
+            {baseSubtitle}
+          </h3>
+          {pathSegments.map((segment, index) => {
+            const isLast = index === pathSegments.length - 1;
+            return (
+              <div key={index} className="flex items-center gap-2">
+                <FaAngleRight color="gray" size={13} className="mt-1" />
+                <h3 
+                  className={`text-sm text-gray-600 capitalize ${!isLast ? 'hover:text-gray-800 hover:cursor-pointer' : ''}`}
+                  onClick={!isLast ? () => handleBreadcrumbClick(pathname) : undefined}
+                >
+                  {segment.replace(/-/g, " ")}
+                </h3>
+              </div>
+            );
+          })}
         </div>
       </>
     );
@@ -121,7 +150,12 @@ export default function Navbar({ time }: NavbarProps) {
           <>
             <h1 className="text-lg font-semibold">All Members</h1>
             <div className="flex gap-2">
-              <h3 className="text-sm text-gray-600">All Members Information</h3>
+              <h3 
+                className="text-sm text-gray-600 hover:text-gray-800 hover:cursor-pointer"
+                onClick={() => handleBreadcrumbClick(pathname, true)}
+              >
+                All Members Information
+              </h3>
               <FaAngleRight color="gray" size={13} className="mt-1" />
               <h3 className="text-sm text-gray-600">{memberDisplayName}</h3>
             </div>
@@ -151,7 +185,7 @@ export default function Navbar({ time }: NavbarProps) {
       const subPath = pathname
         .replace("/dashboard/session-and-event", "")
         .replace(/^\//, "");
-      return renderBreadcrumbs("Sessions & Events", "All Sessions", subPath);
+      return renderBreadcrumbs("Sessions & Events", "All Sessions", "Sessions and Events");
     } else if (pathname.startsWith("/dashboard/resources")) {
       const subPath = pathname
         .replace("/dashboard/resources", "")

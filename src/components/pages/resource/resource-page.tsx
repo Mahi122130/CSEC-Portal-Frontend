@@ -207,7 +207,7 @@ export default function ResourcePage() {
     const isExpanded = expandedStates[division._id] || false
 
     return (
-      <>
+      <div>
         <div className="flex justify-end gap-2">
           {currentUserRole !== "member" && showAddButton && (
             <Button
@@ -279,7 +279,7 @@ export default function ResourcePage() {
             )}
           </div>
         </div>
-      </>
+      </div>
     )
   }
 
