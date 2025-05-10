@@ -79,14 +79,18 @@ export default function Navbar({ time }: NavbarProps) {
   };
 
   const handleBreadcrumbClick = (path: string, isRoot: boolean = false) => {
+    // Preserve all existing query parameters
+    const queryString = searchParams.toString();
+    const queryPrefix = queryString ? `?${queryString}` : '';
+
     if (isRoot) {
-      // Navigate to the root path of the current section
+      // Navigate to the root path of the current section with preserved query params
       const rootPath = path.split('/').slice(0, 3).join('/');
-      router.push(rootPath);
+      router.push(`${rootPath}${queryPrefix}`);
     } else {
-      // For non-root breadcrumbs, go back to the parent path
+      // For non-root breadcrumbs, go back to the parent path with preserved query params
       const parentPath = path.split('/').slice(0, -1).join('/') || '/';
-      router.push(parentPath);
+      router.push(`${parentPath}${queryPrefix}`);
     }
   };
 
@@ -152,7 +156,7 @@ export default function Navbar({ time }: NavbarProps) {
             <div className="flex gap-2">
               <h3 
                 className="text-sm text-gray-600 hover:text-gray-800 hover:cursor-pointer"
-                onClick={() => handleBreadcrumbClick(pathname, true)}
+                onClick={() => router.push(`/dashboard/allmembers?${searchParams.toString()}`)}
               >
                 All Members Information
               </h3>

@@ -2,6 +2,8 @@
 
 import { ChevronRight } from "lucide-react"
 import { useState, useEffect } from "react"
+import Cookies from "js-cookie"
+import api from "@/lib/axios"
 
 export default function SettingsPage() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
@@ -9,9 +11,29 @@ export default function SettingsPage() {
   const [phonePublic, setPhonePublic] = useState(true)
 
   useEffect(() => {
-    // Apply theme class to document element
     document.documentElement.classList.toggle('dark', theme === 'dark')
   }, [theme])
+
+  useEffect(() => {
+    const fetchDivisions = async () => {
+      try {
+        const token = Cookies.get('accessToken');
+        if (!token) return;
+
+        const response = await api.patch('/user/toggle-phone-visibility', null, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'ngrok-skip-browser-warning': 'true'
+          },
+          withCredentials: false
+        });
+      } catch (error) {
+        console.error("Error toggling phone visibility:", error);
+      }
+    };
+    
+    fetchDivisions();
+  }, [phonePublic]);
 
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light')

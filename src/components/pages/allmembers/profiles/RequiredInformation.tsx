@@ -22,6 +22,7 @@ interface MemberData {
     university_id?: string;
     graduation_year?: number;
   };
+  displayPhoneNumber?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -94,7 +95,7 @@ export function RequiredInformation() {
               Mobile Number
             </span>
             <span className="text-gray-800 font-medium">
-              {member.personal_info?.phone_number || "N/A"}
+              {member.displayPhoneNumber ? member.personal_info?.phone_number || "N/A" : "Hidden"}
             </span>
             <div className="w-full border-b border-gray-300"></div>
           </div>
