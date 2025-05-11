@@ -86,7 +86,7 @@ export default function Home() {
             whileTap={{ scale: 0.95 }}
           >
             <Link href="/login">
-              <button className="px-6 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-400 text-white font-medium shadow-lg hover:shadow-cyan-400/30 transition-all duration-300">
+              <button className="px-6 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-400 text-white font-medium shadow-lg hover:shadow-cyan-400/30 transition-all duration-300 cursor-pointer">
                 Login
               </button>
             </Link>
@@ -203,7 +203,7 @@ export default function Home() {
             className="inline-block"
           >
             <Link href="/login">
-              <button className="px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold text-lg shadow-lg hover:shadow-cyan-500/40 transition-all duration-300">
+              <button className="px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold text-lg shadow-lg hover:shadow-cyan-500/40 transition-all duration-300 cursor-pointer">
                 Login
               </button>
             </Link>
