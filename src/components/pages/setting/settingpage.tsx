@@ -8,32 +8,84 @@ import api from "@/lib/axios"
 export default function SettingsPage() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
   const [autoAddEvents, setAutoAddEvents] = useState(true)
-  const [phonePublic, setPhonePublic] = useState(true)
+  const [phonePublic, setPhonePublic] = useState(false)
+  const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
   }, [theme])
 
+  // Initialize phonePublic state from API (only runs once on mount)
   useEffect(() => {
-    const fetchDivisions = async () => {
+    const fetchUserPhoneVisibility = async () => {
       try {
-        const token = Cookies.get('accessToken');
-        if (!token) return;
+        const token = Cookies.get('accessToken')
+        if (!token) return
 
-        const response = await api.patch('/user/toggle-phone-visibility', null, {
+        // Get user ID from localStorage
+        const userString = localStorage.getItem("user")
+        if (!userString) return
+        
+        const user = JSON.parse(userString)
+        const memberId = user._id
+
+        // Fetch current visibility status from API
+        const response = await api.get(`/user/${memberId}`, {
           headers: { 
             Authorization: `Bearer ${token}`,
             'ngrok-skip-browser-warning': 'true'
           },
           withCredentials: false
-        });
+        })
+
+        // Set initial state from API response
+        setPhonePublic(response.data.user.displayPhoneNumber || false)
+        setInitialized(true)
       } catch (error) {
-        console.error("Error toggling phone visibility:", error);
+        console.error("Error fetching user phone visibility:", error)
+        setInitialized(true) // Still mark as initialized
       }
-    };
+    }
+
+    fetchUserPhoneVisibility()
+  }, [])
+
+  const handlePhoneToggle = async () => {
+    if (!initialized) return
     
-    fetchDivisions();
-  }, [phonePublic]);
+    const newValue = !phonePublic
+    setPhonePublic(newValue) // Optimistic UI update
+
+    try {
+      const token = Cookies.get('accessToken')
+      if (!token) {
+        setPhonePublic(phonePublic) // Revert if no token
+        return
+      }
+
+      await api.patch('/user/toggle-phone-visibility', null, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'ngrok-skip-browser-warning': 'true'
+        },
+        withCredentials: false
+      })
+
+      // Update local storage with new value
+      const userString = localStorage.getItem("user")
+      if (userString) {
+        const user = JSON.parse(userString)
+        const updatedUser = {
+          ...user,
+          displayPhoneNumber: newValue
+        }
+        localStorage.setItem("user", JSON.stringify(updatedUser))
+      }
+    } catch (error) {
+      console.error("Error toggling phone visibility:", error)
+      setPhonePublic(phonePublic) // Revert on error
+    }
+  }
 
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light')
@@ -103,15 +155,21 @@ export default function SettingsPage() {
                 id="phone-toggle" 
                 className="sr-only" 
                 checked={phonePublic}
-                onChange={() => setPhonePublic(!phonePublic)}
+                onChange={handlePhoneToggle}
+                disabled={!initialized}
               />
               <label
                 htmlFor="phone-toggle"
-                className={`block overflow-hidden h-6 rounded-full cursor-pointer ${phonePublic ? 'bg-blue-600' : theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'}`}
+                className={`block overflow-hidden h-6 rounded-full cursor-pointer ${!initialized ? 'bg-gray-400' : phonePublic ? 'bg-blue-600' : theme === 'dark' ? 'bg-gray-600' : 'bg-gray-300'}`}
               >
-                <span className="block h-6 w-6 rounded-full bg-white shadow transform transition-transform duration-200 ease-in-out" 
+                <span className={`block h-6 w-6 rounded-full shadow transform transition-transform duration-200 ease-in-out ${!initialized ? 'bg-gray-200' : 'bg-white'}`} 
                   style={{ transform: phonePublic ? 'translateX(16px)' : 'translateX(0)' }}></span>
               </label>
+              {!initialized && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                </div>
+              )}
             </div>
           </div>
         </div>
