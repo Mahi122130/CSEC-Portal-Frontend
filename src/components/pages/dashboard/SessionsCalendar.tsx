@@ -7,7 +7,17 @@ import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import api from "@/lib/axios";
 import Cookies from "js-cookie";
-import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from "date-fns";
+import {
+  format,
+  parseISO,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isSameMonth,
+  isSameDay,
+  addMonths,
+  subMonths,
+} from "date-fns";
 
 interface Session {
   _id: string;
@@ -33,24 +43,24 @@ export default function SessionCalendar() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = Cookies.get('accessToken');
+        const token = Cookies.get("accessToken");
         if (!token) return;
 
         const [sessionsResponse, divisionsResponse] = await Promise.all([
           api.get("/session", {
             headers: {
               Authorization: `Bearer ${token}`,
-              'ngrok-skip-browser-warning': 'true'
+              "ngrok-skip-browser-warning": "true",
             },
-            withCredentials: false
+            withCredentials: false,
           }),
           api.get("/division", {
             headers: {
               Authorization: `Bearer ${token}`,
-              'ngrok-skip-browser-warning': 'true'
+              "ngrok-skip-browser-warning": "true",
             },
-            withCredentials: false
-          })
+            withCredentials: false,
+          }),
         ]);
 
         setSessions(sessionsResponse.data);
@@ -66,7 +76,7 @@ export default function SessionCalendar() {
   }, []);
 
   const getDivisionName = (divisionId: string) => {
-    const division = divisions.find(d => d._id === divisionId);
+    const division = divisions.find((d) => d._id === divisionId);
     return division ? division.name : divisionId;
   };
 
@@ -76,36 +86,42 @@ export default function SessionCalendar() {
 
   // Create a Set of dates that have sessions
   const sessionDates = new Set(
-    sessions.map(session => format(parseISO(session.date), 'yyyy-MM-dd'))
+    sessions.map((session) => format(parseISO(session.date), "yyyy-MM-dd"))
   );
 
   const groupedSessions = sessions.reduce((acc, session) => {
     const sessionDate = parseISO(session.date);
     if (!isSameMonth(sessionDate, currentMonth)) return acc;
-    
-    const dateKey = format(sessionDate, 'EEEE, dd MMMM yyyy');
+
+    const dateKey = format(sessionDate, "EEEE, dd MMMM yyyy");
     if (!acc[dateKey]) {
       acc[dateKey] = [];
     }
-    
+
     acc[dateKey].push({
       time: session.startTime,
       division: session.division,
-      title: session.title
+      title: session.title,
     });
-    
+
     return acc;
   }, {} as Record<string, Array<{ time: string; division: string; title: string }>>);
 
   const startDay = monthStart.getDay();
   const daysInMonth = monthDays.length;
   const weeksInMonth = Math.ceil((startDay + daysInMonth) / 7);
-  const datesGrid = Array(weeksInMonth).fill([]).map((_, weekIndex) => {
-    return Array(7).fill(null).map((_, dayIndex) => {
-      const dayOffset = weekIndex * 7 + dayIndex - startDay;
-      return dayOffset >= 0 && dayOffset < daysInMonth ? monthDays[dayOffset] : null;
+  const datesGrid = Array(weeksInMonth)
+    .fill([])
+    .map((_, weekIndex) => {
+      return Array(7)
+        .fill(null)
+        .map((_, dayIndex) => {
+          const dayOffset = weekIndex * 7 + dayIndex - startDay;
+          return dayOffset >= 0 && dayOffset < daysInMonth
+            ? monthDays[dayOffset]
+            : null;
+        });
     });
-  });
 
   const handlePrevMonth = () => {
     setCurrentMonth(subMonths(currentMonth, 1));
@@ -122,27 +138,25 @@ export default function SessionCalendar() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <h3 className="text-lg font-semibold">Session</h3>
-          <Button variant="outline" size="icon" className="h-8 w-8">
-            <CalendarIcon className="h-4 w-4" />
-          </Button>
+          <CalendarIcon className="h-4 w-4" />
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center mb-4">
             <div className="flex items-center justify-between gap-2">
-              <Button 
-                variant="none" 
-                size="icon" 
+              <Button
+                variant="none"
+                size="icon"
                 className="h-7 w-7 bg-[#003087] rounded-[8px]"
                 onClick={handlePrevMonth}
               >
                 <ChevronLeft className="h-4 w-4" color="white" />
               </Button>
               <div className=" font-semibold text-xl">
-                {format(currentMonth, 'MMMM, yyyy')}
+                {format(currentMonth, "MMMM, yyyy")}
               </div>
-              <Button 
-                variant="none" 
-                size="icon" 
+              <Button
+                variant="none"
+                size="icon"
                 className="h-7 w-7 bg-[#003087] rounded-[8px]"
                 onClick={handleNextMonth}
               >
@@ -165,13 +179,21 @@ export default function SessionCalendar() {
                   key={i}
                   className={cn(
                     "aspect-square flex items-center justify-center rounded-full",
-                    date && isSameDay(date, new Date()) && "bg-[#003087] text-white",
+                    date &&
+                      isSameDay(date, new Date()) &&
+                      "bg-[#003087] text-white",
                     !date && "invisible",
-                    date && sessionDates.has(format(date, 'yyyy-MM-dd')) && !isSameDay(date, new Date()) && "bg-[#002f876c]",
-                    date && !sessionDates.has(format(date, 'yyyy-MM-dd')) && !isSameDay(date, new Date()) && "hover:bg-muted",
+                    date &&
+                      sessionDates.has(format(date, "yyyy-MM-dd")) &&
+                      !isSameDay(date, new Date()) &&
+                      "bg-[#002f876c]",
+                    date &&
+                      !sessionDates.has(format(date, "yyyy-MM-dd")) &&
+                      !isSameDay(date, new Date()) &&
+                      "hover:bg-muted"
                   )}
                 >
-                  {date && format(date, 'd')}
+                  {date && format(date, "d")}
                 </div>
               ))}
             </div>
@@ -204,7 +226,9 @@ export default function SessionCalendar() {
                   <div className="space-y-3">
                     {events.map((event, eventIdx) => (
                       <div key={eventIdx} className="flex gap-3">
-                        <div className="text-sm font-medium w-10">{event.time}</div>
+                        <div className="text-sm font-medium w-10">
+                          {event.time}
+                        </div>
                         <div className="flex-1">
                           <div className="text-xs text-muted-foreground">
                             {getDivisionName(event.division)}

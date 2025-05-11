@@ -32,7 +32,7 @@ export default function ResourcePage() {
   const [token, setToken] = useState<string | null>(null)
   const [divisions, setDivisions] = useState<Division[]>([])
   const [resources, setResources] = useState<Record<string, Resource[]>>({})
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const match = document.cookie.match(/accessToken=([^;]+)/)
@@ -58,7 +58,6 @@ export default function ResourcePage() {
 
       setDivisions(divisionsData)
       
-      // Initialize expanded states
       const initialExpandedStates: Record<string, boolean> = {}
       divisionsData.forEach((div: Division) => {
         initialExpandedStates[div._id] = div._id === divisionsData[0]?._id
@@ -88,14 +87,17 @@ export default function ResourcePage() {
         }
       })
 
-      // Initialize resources object with empty arrays for each division
       const newResources: Record<string, Resource[]> = {}
       divisions.forEach(div => {
         newResources[div._id] = []
       })
 
-      // Populate the resources
       response.data.forEach((resource: any) => {
+        if (!resource.division) {
+          console.warn("Resource missing division:", resource)
+          return
+        }
+
         const divisionId = resource.division._id
         if (newResources[divisionId]) {
           newResources[divisionId].push({
@@ -133,6 +135,14 @@ export default function ResourcePage() {
       fetchResources()
     }
   }, [divisions])
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#003087]"></div>
+      </div>
+    )
+  }
 
   const toggleExpanded = (divisionId: string) => {
     setExpandedStates(prev => ({
@@ -207,7 +217,7 @@ export default function ResourcePage() {
     const isExpanded = expandedStates[division._id] || false
 
     return (
-      <div>
+      <>
         <div className="flex justify-end gap-2">
           {currentUserRole !== "member" && showAddButton && (
             <Button
@@ -223,11 +233,11 @@ export default function ResourcePage() {
             </Button>
           )}
         </div>
-        <div key={division._id} className="rounded-md overflow-hidden border border-gray-200 mb-4">
-          <div className="p-4 ">
+        <div className="rounded-md overflow-hidden border border-gray-200 mb-4">
+          <div className="p-4">
             <div className="flex justify-between items-start">
               <div>
-                <h2 className="font-medium ">{division.name}</h2>
+                <h2 className="font-medium">{division.name}</h2>
                 <p className="text-sm text-gray-500 mt-1">
                   {division.description || `Useful resources for the ${division.name} division`}
                 </p>
@@ -235,7 +245,7 @@ export default function ResourcePage() {
             </div>
           </div>
 
-          <div className="border-t border-gray-100 ">
+          <div className="border-t border-gray-100">
             <div
               className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-100"
               onClick={() => toggleExpanded(division._id)}
@@ -252,7 +262,7 @@ export default function ResourcePage() {
               <div className="border-t border-gray-200">
                 {divisionResources.length === 0 ? (
                   <div className="p-4 text-sm text-gray-500">
-                    {isLoading ? "Loading..." : "No resources found"}
+                    No resources found
                   </div>
                 ) : (
                   divisionResources.map((resource) => (
@@ -279,7 +289,7 @@ export default function ResourcePage() {
             )}
           </div>
         </div>
-      </div>
+      </>
     )
   }
 
@@ -290,11 +300,15 @@ export default function ResourcePage() {
           {divisions.length > 0 ? (
             <>
               {renderDivisionSection(divisions[0], true)}
-              {divisions.slice(1).map(division => renderDivisionSection(division))}
+              {divisions.slice(1).map((division) => (
+                <div key={division._id}>
+                  {renderDivisionSection(division)}
+                </div>
+              ))}
             </>
           ) : (
             <div className="text-center py-8">
-              {isLoading ? "Loading divisions..." : "No divisions found"}
+              No divisions found
             </div>
           )}
         </div>

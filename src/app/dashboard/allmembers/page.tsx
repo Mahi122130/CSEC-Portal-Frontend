@@ -135,16 +135,6 @@ export default function MembersPage() {
     return "N/A";
   };
 
-  const getMemberStatus = (member: any) => {
-    const lastUpdated = new Date(member.updatedAt);
-    const currentDate = new Date();
-    const monthsSinceUpdate =
-      (currentDate.getFullYear() - lastUpdated.getFullYear()) * 12 +
-      (currentDate.getMonth() - lastUpdated.getMonth());
-
-    return monthsSinceUpdate < 6 ? "OnCampus" : "OffCampus";
-  };
-
   const getMemberAttendance = (member: any) => {
     const lastUpdated = new Date(member.updatedAt);
     const currentDate = new Date();

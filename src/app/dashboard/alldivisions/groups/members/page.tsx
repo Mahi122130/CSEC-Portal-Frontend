@@ -22,9 +22,55 @@ export default function TableUsage() {
   const divisionId = searchParams.get("divisionId");
 
   useEffect(() => {
-    const role = Cookies.get("role");
-    setCanAddMembers(!!role && role !== "member");
-  }, []);
+    const checkUserPermissions = async () => {
+      try {
+        const role = Cookies.get("role");
+        if (!role || role === "member") {
+          setCanAddMembers(false);
+          return;
+        }
+
+        const userString = localStorage.getItem("user");
+        if (!userString) {
+          setCanAddMembers(false);
+          return;
+        }
+        
+        const user = JSON.parse(userString);
+        const userId = user._id;
+        
+        if (!divisionId) {
+          setCanAddMembers(false);
+          return;
+        }
+        
+        const token = Cookies.get("accessToken");
+        if (!token) {
+          setCanAddMembers(false);
+          return;
+        }
+        
+        const response = await api.get(`/group/${divisionId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        });
+        
+        const groups = response.data;
+        const isMember = groups.some((group: any) => 
+          group.members.includes(userId)
+        );
+        
+        setCanAddMembers(isMember);
+      } catch (err) {
+        console.error("Error checking user permissions:", err);
+        setCanAddMembers(false);
+      }
+    };
+
+    checkUserPermissions();
+  }, [divisionId]);
 
   useEffect(() => {
     const fetchMembers = async () => {
