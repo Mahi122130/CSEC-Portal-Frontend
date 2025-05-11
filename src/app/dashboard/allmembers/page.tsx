@@ -29,7 +29,7 @@ export default function MembersPage() {
     statuses: [],
   });
   const [divisions, setDivisions] = useState<{ name: string }[]>([]);
-  const itemsPerPage = 6;
+  const itemsPerPage = 7;
 
   useEffect(() => {
     const role = Cookies.get("role");

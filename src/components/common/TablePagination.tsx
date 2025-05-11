@@ -77,6 +77,7 @@ export function TablePagination({
   const handleItemsPerPageChange = (value: string) => {
     if (onItemsPerPageChange) {
       onItemsPerPageChange(Number(value));
+      onPageChange(1); // Reset to first page when changing items per page
     }
   };
 
@@ -87,40 +88,10 @@ export function TablePagination({
           <DropdownMenuTrigger asChild>
             <div className="flex gap-3">
               <div className="flex w-full justify-center items-center">
-                Showing
+                Showing ...
               </div>
-              <Button
-                variant="outline"
-                className="flex w-15 h-10 border-1 border-gray-200 rounded-[8px]"
-              >
-                <div className="flex">
-                  <div className="flex w-auto items-center justify-center p-0.5">
-                    {itemsPerPage}
-                  </div>
-                  <div className="flex items-center p-1">
-                    <Img
-                      src={DownArrow}
-                      alt="down arrow"
-                      width={15}
-                      height={15}
-                    />
-                  </div>
-                </div>
-              </Button>
             </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56">
-            <DropdownMenuLabel>Items per page</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuRadioGroup
-              value={itemsPerPage.toString()}
-              onValueChange={handleItemsPerPageChange}
-            >
-              <DropdownMenuRadioItem value="10">10</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="20">20</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="30">30</DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
         </DropdownMenu>
       </div>
 

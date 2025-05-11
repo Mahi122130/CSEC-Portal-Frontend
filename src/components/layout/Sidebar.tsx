@@ -147,7 +147,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarContent>
           <div>
             <SidebarFooter>
-              <div className="flex justify-center gap-3 mt-25 p-5">
+              <div className="flex justify-center gap-3 mt-23 p-5">
                 <div className="flex gap-3 items-center justify-center">
                   <Button
                     variant="outline"
